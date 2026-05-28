@@ -1,11 +1,12 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useProducts } from "@/hooks/use-products";
 import { useEntries } from "@/hooks/use-entries";
 import { EmptyState } from "@/components/ui/empty-state";
 import { SkeletonList } from "@/components/ui/skeleton-list";
 import { ProductRow } from "./product-row";
+import { DecreaseSheet } from "./decrease-sheet";
 import type { Compartment } from "./compartment-tabs";
 import type { Product } from "@/db/schema/products";
 import type { Entry } from "@/db/schema/entries";
@@ -70,6 +71,7 @@ function aggregateByProduct(
 }
 
 export function InventoryList({ compartment, categoryId }: InventoryListProps) {
+  const [decreaseItem, setDecreaseItem] = useState<AggregatedProduct | null>(null);
   const { data: products, isLoading: productsLoading } = useProducts();
   const { data: entries, isLoading: entriesLoading } = useEntries(
     compartment === "all"
@@ -100,14 +102,24 @@ export function InventoryList({ compartment, categoryId }: InventoryListProps) {
   }
 
   return (
-    <div className="divide-y divide-border">
-      {aggregated.map((item) => (
-        <ProductRow
-          key={item.product.id}
-          item={item}
-          showCompartments={compartment === "all"}
-        />
-      ))}
-    </div>
+    <>
+      <div className="divide-y divide-border">
+        {aggregated.map((item) => (
+          <ProductRow
+            key={item.product.id}
+            item={item}
+            showCompartments={compartment === "all"}
+            onDecrease={setDecreaseItem}
+          />
+        ))}
+      </div>
+      <DecreaseSheet
+        item={decreaseItem}
+        open={!!decreaseItem}
+        onOpenChange={(open) => {
+          if (!open) setDecreaseItem(null);
+        }}
+      />
+    </>
   );
 }

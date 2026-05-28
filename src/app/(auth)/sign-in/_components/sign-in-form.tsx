@@ -16,12 +16,10 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 
-export function SignUpForm() {
+export function SignInForm() {
   const router = useRouter();
-  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [householdName, setHouseholdName] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -31,37 +29,16 @@ export function SignUpForm() {
     setLoading(true);
 
     try {
-      const { error: signUpError } = await authClient.signUp.email({
-        name,
+      const { error: signInError } = await authClient.signIn.email({
         email,
         password,
       });
 
-      if (signUpError) {
-        setError(signUpError.message ?? "Sign up failed");
+      if (signInError) {
+        setError(signInError.message ?? "Invalid email or password");
         setLoading(false);
         return;
       }
-
-      const { data: org, error: orgError } =
-        await authClient.organization.create({
-          name: householdName || `${name}'s Household`,
-          slug: generateSlug(householdName || `${name}'s Household`),
-        });
-
-      if (orgError) {
-        setError(orgError.message ?? "Failed to create household");
-        setLoading(false);
-        return;
-      }
-
-      await fetch("/api/households/setup", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ householdId: org.id }),
-      });
-
-      await authClient.organization.setActive({ organizationId: org.id });
 
       router.push("/inventory");
     } catch {
@@ -74,25 +51,11 @@ export function SignUpForm() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Create your account</CardTitle>
-        <CardDescription>
-          Sign up to start managing your household inventory
-        </CardDescription>
+        <CardTitle>Welcome back</CardTitle>
+        <CardDescription>Sign in to your account</CardDescription>
       </CardHeader>
       <form onSubmit={handleSubmit}>
         <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="name">Name</Label>
-            <Input
-              id="name"
-              type="text"
-              required
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Your name"
-            />
-          </div>
-
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
             <Input
@@ -111,26 +74,9 @@ export function SignUpForm() {
               id="password"
               type="password"
               required
-              minLength={8}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="Min. 8 characters"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="household">
-              Household name{" "}
-              <span className="text-muted-foreground font-normal">
-                (optional)
-              </span>
-            </Label>
-            <Input
-              id="household"
-              type="text"
-              value={householdName}
-              onChange={(e) => setHouseholdName(e.target.value)}
-              placeholder="e.g. The Smiths"
+              placeholder="Your password"
             />
           </div>
 
@@ -142,26 +88,19 @@ export function SignUpForm() {
         </CardContent>
         <CardFooter className="flex flex-col gap-4">
           <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? "Creating account..." : "Sign up"}
+            {loading ? "Signing in..." : "Sign in"}
           </Button>
           <p className="text-muted-foreground text-center text-sm">
-            Already have an account?{" "}
+            Don&apos;t have an account?{" "}
             <Link
-              href="/sign-in"
+              href="/sign-up"
               className="text-primary underline-offset-4 hover:underline"
             >
-              Sign in
+              Sign up
             </Link>
           </p>
         </CardFooter>
       </form>
     </Card>
   );
-}
-
-function generateSlug(name: string): string {
-  return name
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-|-$/g, "");
 }

@@ -92,7 +92,7 @@
 
 - [x] Task 1: Create TanStack Query hooks — useProducts, useEntries, useCategories, useProductHints
 <!-- files: src/hooks/use-products.ts, src/hooks/use-entries.ts, src/hooks/use-categories.ts, src/hooks/use-product-hints.ts -->
-- [ ] Task 2: Create mutation hooks — useCreateEntry, useDecreaseQuantity, useUpdateEntry, useDeleteEntry, useMarkAsWasted
+- [x] Task 2: Create mutation hooks — useCreateEntry, useDecreaseQuantity, useUpdateEntry, useDeleteEntry, useMarkAsWasted
 <!-- files: src/hooks/use-entry-mutations.ts -->
 - [ ] Task 3: Set up MSW handlers for component tests
 <!-- files: src/mocks/handlers.ts, src/mocks/server.ts -->

@@ -94,7 +94,7 @@
 <!-- files: src/hooks/use-products.ts, src/hooks/use-entries.ts, src/hooks/use-categories.ts, src/hooks/use-product-hints.ts -->
 - [x] Task 2: Create mutation hooks — useCreateEntry, useDecreaseQuantity, useUpdateEntry, useDeleteEntry, useMarkAsWasted
 <!-- files: src/hooks/use-entry-mutations.ts -->
-- [ ] Task 3: Set up MSW handlers for component tests
+- [x] Task 3: Set up MSW handlers for component tests
 <!-- files: src/mocks/handlers.ts, src/mocks/server.ts -->
 - [ ] Task 4: Build inventory list page with compartment tabs (All, Pantry, Fridge, Freezer) — aggregated Product rows with subtotals
 <!-- files: src/app/(app)/inventory/page.tsx, src/app/(app)/inventory/_components/inventory-list.tsx, src/app/(app)/inventory/_components/compartment-tabs.tsx -->

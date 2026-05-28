@@ -3,6 +3,7 @@
 import { useEntries } from "@/hooks/use-entries";
 import { SkeletonList } from "@/components/ui/skeleton-list";
 import { EmptyState } from "@/components/ui/empty-state";
+import { EditEntryDialog } from "./edit-entry-dialog";
 import type { Entry } from "@/db/schema/entries";
 
 interface EntryListProps {
@@ -41,6 +42,7 @@ function EntryRow({ entry }: { entry: Entry }) {
           )}
         </div>
       </div>
+      <EditEntryDialog entry={entry} />
     </div>
   );
 }

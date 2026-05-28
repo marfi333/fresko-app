@@ -100,7 +100,7 @@
 <!-- files: src/app/(app)/inventory/page.tsx, src/app/(app)/inventory/_components/inventory-list.tsx, src/app/(app)/inventory/_components/compartment-tabs.tsx -->
 - [x] Task 5: Build Product row component (name, aggregated quantity, unit, compartment indicators on All tab, expiry warning badge)
 <!-- files: src/app/(app)/inventory/_components/product-row.tsx -->
-- [ ] Task 6: Build Product detail view — list of individual Entries (quantity, compartment, expiry, created_by)
+- [x] Task 6: Build Product detail view — list of individual Entries (quantity, compartment, expiry, created_by)
 <!-- files: src/app/(app)/inventory/[productId]/page.tsx, src/app/(app)/inventory/[productId]/_components/entry-list.tsx -->
 - [ ] Task 7: Build Add Entry flow — autocomplete Product search, adaptive form (existing: locked unit/category; new: editable with Product Hint pre-fill), compartment selector, expiry date picker
 <!-- files: src/app/(app)/inventory/_components/add-entry-dialog.tsx, src/app/(app)/inventory/_components/product-autocomplete.tsx, src/app/(app)/inventory/_components/entry-form.tsx -->

@@ -6,17 +6,19 @@ import type { Entry } from "@/db/schema/entries";
 interface UseEntriesOptions {
   compartment?: "pantry" | "fridge" | "freezer";
   categoryId?: number;
+  productId?: number;
 }
 
 export function useEntries(options?: UseEntriesOptions) {
-  const { compartment, categoryId } = options ?? {};
+  const { compartment, categoryId, productId } = options ?? {};
 
   return useQuery<Entry[]>({
-    queryKey: ["entries", compartment ?? "all", categoryId ?? null],
+    queryKey: ["entries", compartment ?? "all", categoryId ?? null, productId ?? null],
     queryFn: async () => {
       const params = new URLSearchParams();
       if (compartment) params.set("compartment", compartment);
       if (categoryId) params.set("categoryId", String(categoryId));
+      if (productId) params.set("productId", String(productId));
       const url = `/api/entries${params.toString() ? `?${params}` : ""}`;
       const res = await fetch(url);
       if (!res.ok) throw new Error("Failed to fetch entries");

@@ -12,6 +12,7 @@ export async function GET(request: Request) {
   const url = new URL(request.url);
   const compartment = url.searchParams.get("compartment");
   const categoryId = url.searchParams.get("categoryId");
+  const productId = url.searchParams.get("productId");
 
   const conditions: ReturnType<typeof eq>[] = [
     eq(entries.householdId, ctx.householdId),
@@ -26,6 +27,10 @@ export async function GET(request: Request) {
     conditions.push(
       eq(entries.compartment, compartment as (typeof VALID_COMPARTMENTS)[number])
     );
+  }
+
+  if (productId) {
+    conditions.push(eq(entries.productId, parseInt(productId, 10)));
   }
 
   if (categoryId) {

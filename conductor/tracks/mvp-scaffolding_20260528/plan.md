@@ -96,9 +96,9 @@
 <!-- files: src/hooks/use-entry-mutations.ts -->
 - [x] Task 3: Set up MSW handlers for component tests
 <!-- files: src/mocks/handlers.ts, src/mocks/server.ts -->
-- [ ] Task 4: Build inventory list page with compartment tabs (All, Pantry, Fridge, Freezer) — aggregated Product rows with subtotals
+- [x] Task 4: Build inventory list page with compartment tabs (All, Pantry, Fridge, Freezer) — aggregated Product rows with subtotals
 <!-- files: src/app/(app)/inventory/page.tsx, src/app/(app)/inventory/_components/inventory-list.tsx, src/app/(app)/inventory/_components/compartment-tabs.tsx -->
-- [ ] Task 5: Build Product row component (name, aggregated quantity, unit, compartment indicators on All tab, expiry warning badge)
+- [x] Task 5: Build Product row component (name, aggregated quantity, unit, compartment indicators on All tab, expiry warning badge)
 <!-- files: src/app/(app)/inventory/_components/product-row.tsx -->
 - [ ] Task 6: Build Product detail view — list of individual Entries (quantity, compartment, expiry, created_by)
 <!-- files: src/app/(app)/inventory/[productId]/page.tsx, src/app/(app)/inventory/[productId]/_components/entry-list.tsx -->

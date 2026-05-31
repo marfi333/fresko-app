@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import type { Entry } from "@/db/schema/entries";
 
 type UseEntriesOptions = {
@@ -24,5 +24,6 @@ export const useEntries = (options?: UseEntriesOptions) => {
       if (!res.ok) throw new Error("Failed to fetch entries");
       return res.json();
     },
+    placeholderData: keepPreviousData,
   });
 };

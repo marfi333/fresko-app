@@ -7,6 +7,10 @@ import { getDb } from "@/db";
 export const createAuth = (baseURL?: string) => {
   return betterAuth({
     baseURL,
+    trustedOrigins:
+      process.env.NODE_ENV === "development"
+        ? ["http://10.*.*.*:*", "http://192.168.*.*:*", "http://172.*.*.*:*"]
+        : [],
     database: drizzleAdapter(getDb(), {
       provider: "sqlite",
       usePlural: false,

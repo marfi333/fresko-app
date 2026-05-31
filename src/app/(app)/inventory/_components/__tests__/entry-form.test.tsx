@@ -11,13 +11,50 @@ afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
 
 describe("EntryForm with a new-product choice", () => {
-  it("displays the pre-filled product name", () => {
+  it("renders the pre-filled product name in an editable input", () => {
     const choice: ProductChoice = { type: "new", name: "Acme Whole Milk 2L" };
     const { wrapper } = createQueryWrapper();
 
     render(<EntryForm productChoice={choice} onSubmit={vi.fn()} onCancel={vi.fn()} />, { wrapper });
 
-    expect(screen.getByText("Acme Whole Milk 2L")).toBeInTheDocument();
+    const input = screen.getByLabelText(/product name/i) as HTMLInputElement;
+    expect(input.value).toBe("Acme Whole Milk 2L");
+  });
+
+  it("blocks submit and shows an error when the product name is empty", async () => {
+    const onSubmit = vi.fn();
+    const user = userEvent.setup();
+    const choice: ProductChoice = { type: "new", name: "" };
+    const { wrapper } = createQueryWrapper();
+
+    render(<EntryForm productChoice={choice} onSubmit={onSubmit} onCancel={vi.fn()} />, {
+      wrapper,
+    });
+
+    await user.click(screen.getByRole("button", { name: /add entry/i }));
+
+    expect(onSubmit).not.toHaveBeenCalled();
+    expect(screen.getByText(/product name is required/i)).toBeInTheDocument();
+  });
+
+  it("uses the user-edited name when submitting (overrides initial choice.name)", async () => {
+    const onSubmit = vi.fn();
+    const user = userEvent.setup();
+    const choice: ProductChoice = { type: "new", name: "auto-filled" };
+    const { wrapper } = createQueryWrapper();
+
+    render(<EntryForm productChoice={choice} onSubmit={onSubmit} onCancel={vi.fn()} />, {
+      wrapper,
+    });
+
+    const input = screen.getByLabelText(/product name/i);
+    await user.clear(input);
+    await user.type(input, "Hand-typed Name");
+    await user.click(screen.getByRole("button", { name: /add entry/i }));
+
+    await waitFor(() => expect(onSubmit).toHaveBeenCalled());
+    const payload = onSubmit.mock.calls[0][0];
+    expect(payload.productChoice.name).toBe("Hand-typed Name");
   });
 
   it("forwards the barcode through onSubmit when productChoice carries one", async () => {

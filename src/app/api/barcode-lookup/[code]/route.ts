@@ -1,13 +1,10 @@
 import { NextResponse } from "next/server";
 import { getRequestContext } from "@/lib/api-utils";
-import {
-  buildOffUrl,
-  buildOffUserAgent,
-  normalizeOffResponse,
-} from "@/lib/barcode/open-food-facts";
+import { readCache, writeCacheHit, writeCacheMiss } from "@/lib/barcode/cache";
+import { resolveProductData } from "@/lib/barcode/providers";
 
 const BARCODE_PATTERN = /^(\d{8}|\d{12}|\d{13})$/;
-const OFF_TIMEOUT_MS = 5_000;
+const FETCH_TIMEOUT_MS = 5_000;
 
 type RouteParams = { params: Promise<{ code: string }> };
 
@@ -20,34 +17,46 @@ export const GET = async (request: Request, { params }: RouteParams) => {
     return NextResponse.json({ error: "Invalid barcode" }, { status: 400 });
   }
 
-  const origin = new URL(request.url).origin;
-
-  let response: Response;
-  try {
-    response = await fetch(buildOffUrl(code), {
-      headers: { "User-Agent": buildOffUserAgent(origin) },
-      signal: AbortSignal.timeout(OFF_TIMEOUT_MS),
+  // Cache short-circuit
+  const cached = await readCache(ctx.db, code);
+  if (cached.kind === "hit" && cached.fresh) {
+    return NextResponse.json({
+      name: cached.name,
+      brands: cached.brands,
+      categoriesTags: cached.categoriesTags,
+      quantity: cached.quantity,
     });
-  } catch (err) {
-    const name = (err as { name?: string } | null)?.name;
-    if (name === "AbortError" || name === "TimeoutError") {
-      return NextResponse.json({ error: "Lookup timed out" }, { status: 504 });
-    }
-    return NextResponse.json({ error: "Lookup failed" }, { status: 502 });
   }
-
-  if (response.status === 404) {
-    return NextResponse.json({ error: "Not found" }, { status: 404 });
-  }
-  if (!response.ok) {
-    return NextResponse.json({ error: "Upstream error" }, { status: 502 });
-  }
-
-  const raw = (await response.json()) as unknown;
-  const normalized = normalizeOffResponse(raw);
-  if (!normalized) {
+  if (cached.kind === "miss" && cached.fresh) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
-  return NextResponse.json(normalized);
+  // Stale or no cache → walk the provider chain
+  const origin = new URL(request.url).origin;
+  const result = await resolveProductData(code, {
+    origin,
+    signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+  });
+
+  if (result.kind === "hit") {
+    await writeCacheHit(ctx.db, {
+      barcode: code,
+      source: result.providerId,
+      ...result.data,
+      rawResponse: result.raw,
+    });
+    return NextResponse.json(result.data);
+  }
+
+  if (result.kind === "transient") {
+    return NextResponse.json(
+      { error: result.status === 504 ? "Lookup timed out" : "Lookup failed" },
+      { status: result.status }
+    );
+  }
+
+  // All providers missed → confirmed unknown for TTL. Persist every raw
+  // payload so we know exactly what each upstream said for this code.
+  await writeCacheMiss(ctx.db, code, result.rawByProvider);
+  return NextResponse.json({ error: "Not found" }, { status: 404 });
 };

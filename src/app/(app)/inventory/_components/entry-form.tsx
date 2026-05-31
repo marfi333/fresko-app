@@ -43,6 +43,8 @@ export const EntryForm = ({ productChoice, onSubmit, onCancel, isSubmitting }: E
   const [quantity, setQuantity] = useState("1");
   const [compartment, setCompartment] = useState<"pantry" | "fridge" | "freezer">("pantry");
   const [expiryDate, setExpiryDate] = useState("");
+  const [editedName, setEditedName] = useState(isExisting ? "" : productChoice.name);
+  const [nameError, setNameError] = useState<string | null>(null);
   const [unit, setUnit] = useState(
     isExisting ? existingProduct?.unit : (productChoice.suggestedUnit ?? "pieces")
   );
@@ -62,30 +64,65 @@ export const EntryForm = ({ productChoice, onSubmit, onCancel, isSubmitting }: E
     const qty = parseFloat(quantity);
     if (Number.isNaN(qty) || qty <= 0) return;
 
+    if (!isExisting) {
+      const trimmed = editedName.trim();
+      if (!trimmed) {
+        setNameError("Product name is required");
+        return;
+      }
+      onSubmit({
+        productChoice: { ...productChoice, name: trimmed },
+        quantity: qty,
+        compartment,
+        expiryDate: expiryDate || undefined,
+        unit,
+        categoryId,
+        barcode: productChoice.barcode,
+      });
+      return;
+    }
+
     onSubmit({
       productChoice,
       quantity: qty,
       compartment,
       expiryDate: expiryDate || undefined,
-      unit: isExisting ? undefined : unit,
-      categoryId: isExisting ? undefined : categoryId,
-      barcode: !isExisting ? productChoice.barcode : undefined,
+      unit: undefined,
+      categoryId: undefined,
+      barcode: undefined,
     });
   };
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-      <div className="space-y-1">
-        <span className="text-xs font-medium text-muted-foreground">Product</span>
-        <div className="flex items-baseline gap-2 rounded-md bg-secondary/50 px-3 py-2">
-          <span className="text-base font-medium">
-            {isExisting ? existingProduct?.name : productChoice.name}
-          </span>
-          {isExisting && (
+      {isExisting ? (
+        <div className="space-y-1">
+          <span className="text-xs font-medium text-muted-foreground">Product</span>
+          <div className="flex items-baseline gap-2 rounded-md bg-secondary/50 px-3 py-2">
+            <span className="text-base font-medium">{existingProduct?.name}</span>
             <span className="text-xs text-muted-foreground">{existingProduct?.unit}</span>
+          </div>
+        </div>
+      ) : (
+        <div className="space-y-2">
+          <Label htmlFor="product-name">Product name</Label>
+          <Input
+            id="product-name"
+            value={editedName}
+            onChange={(e) => {
+              setEditedName(e.target.value);
+              if (nameError) setNameError(null);
+            }}
+            placeholder="e.g. Coca-Cola 0.5L"
+            autoFocus={!editedName}
+          />
+          {nameError && (
+            <p className="text-xs text-destructive" role="alert">
+              {nameError}
+            </p>
           )}
         </div>
-      </div>
+      )}
 
       {!isExisting && (
         <>

@@ -1,6 +1,8 @@
 "use client";
 
+import { Check } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { WebHaptics } from "web-haptics";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -8,11 +10,20 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { useBarcodeScanner } from "@/hooks/use-barcode-scanner";
 
 const BARCODE_PATTERN = /^(\d{8}|\d{12}|\d{13})$/;
+const SUCCESS_DELAY_MS = 600;
 
 type BarcodeScannerSheetProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onResult: (code: string) => void;
+};
+
+let hapticsInstance: WebHaptics | null = null;
+const triggerSuccessHaptic = () => {
+  if (typeof window === "undefined") return;
+  if (!WebHaptics.isSupported) return;
+  if (!hapticsInstance) hapticsInstance = new WebHaptics();
+  void hapticsInstance.trigger("success");
 };
 
 export const BarcodeScannerSheet = ({ open, onOpenChange, onResult }: BarcodeScannerSheetProps) => {
@@ -21,11 +32,23 @@ export const BarcodeScannerSheet = ({ open, onOpenChange, onResult }: BarcodeSca
   openRef.current = open;
   const [manualCode, setManualCode] = useState("");
   const [manualError, setManualError] = useState<string | null>(null);
+  const [scannedCode, setScannedCode] = useState<string | null>(null);
 
-  const handleResult = (text: string) => {
-    onResult(text);
-    onOpenChange(false);
-  };
+  const dismissTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const handleResult = useCallback(
+    (text: string) => {
+      // Already capturing a code → ignore late callbacks
+      if (scannedCode) return;
+      setScannedCode(text);
+      triggerSuccessHaptic();
+      dismissTimerRef.current = setTimeout(() => {
+        onResult(text);
+        onOpenChange(false);
+      }, SUCCESS_DELAY_MS);
+    },
+    [scannedCode, onResult, onOpenChange]
+  );
 
   const { start, stop, isScanning, error } = useBarcodeScanner({
     onResult: handleResult,
@@ -47,13 +70,30 @@ export const BarcodeScannerSheet = ({ open, onOpenChange, onResult }: BarcodeSca
     [start]
   );
 
-  // When the sheet closes, tear down the scanner and reset manual-entry state.
+  // When the sheet closes, tear down the scanner and reset state.
   useEffect(() => {
     if (open) return;
     stop();
     setManualCode("");
     setManualError(null);
+    setScannedCode(null);
+    if (dismissTimerRef.current) {
+      clearTimeout(dismissTimerRef.current);
+      dismissTimerRef.current = null;
+    }
   }, [open, stop]);
+
+  // Cancel pending dismiss timer on unmount to avoid setState-after-unmount.
+  useEffect(() => {
+    return () => {
+      if (dismissTimerRef.current) clearTimeout(dismissTimerRef.current);
+    };
+  }, []);
+
+  // Once we have a scanned code, kill the scanner so it doesn't keep decoding.
+  useEffect(() => {
+    if (scannedCode) stop();
+  }, [scannedCode, stop]);
 
   const handleManualSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -66,6 +106,8 @@ export const BarcodeScannerSheet = ({ open, onOpenChange, onResult }: BarcodeSca
     handleResult(trimmed);
   };
 
+  const isSubmitting = scannedCode !== null;
+
   const cameraBlocked = error === "permission-denied" || error === "unavailable";
 
   return (
@@ -76,8 +118,8 @@ export const BarcodeScannerSheet = ({ open, onOpenChange, onResult }: BarcodeSca
         </SheetHeader>
 
         <div className="mt-4 flex flex-col gap-4">
-          {!cameraBlocked && (
-            <div className="relative aspect-[2/1] w-full overflow-hidden rounded-md bg-black">
+          {!cameraBlocked && !scannedCode && (
+            <div className="relative aspect-2/1 w-full overflow-hidden rounded-md bg-black">
               {/* biome-ignore lint/a11y/useMediaCaption: live camera preview, no captions available */}
               <video
                 ref={videoCallbackRef}
@@ -92,6 +134,20 @@ export const BarcodeScannerSheet = ({ open, onOpenChange, onResult }: BarcodeSca
                   Starting camera…
                 </div>
               )}
+            </div>
+          )}
+
+          {scannedCode && (
+            <div
+              className="flex items-center gap-3 rounded-md border border-emerald-500/30 bg-emerald-500/10 px-4 py-3"
+              role="status"
+              aria-live="polite"
+            >
+              <Check className="h-5 w-5 text-emerald-600" aria-hidden="true" />
+              <div className="flex flex-col">
+                <span className="text-sm font-medium">Got it!</span>
+                <span className="font-mono text-xs text-muted-foreground">{scannedCode}</span>
+              </div>
             </div>
           )}
 
@@ -118,6 +174,7 @@ export const BarcodeScannerSheet = ({ open, onOpenChange, onResult }: BarcodeSca
                 if (manualError) setManualError(null);
               }}
               placeholder="8, 12, or 13 digits"
+              disabled={isSubmitting}
             />
             {manualError && (
               <p className="text-xs text-destructive" role="alert">
@@ -130,10 +187,11 @@ export const BarcodeScannerSheet = ({ open, onOpenChange, onResult }: BarcodeSca
                 variant="outline"
                 className="flex-1"
                 onClick={() => onOpenChange(false)}
+                disabled={isSubmitting}
               >
                 Cancel
               </Button>
-              <Button type="submit" className="flex-1">
+              <Button type="submit" className="flex-1" disabled={isSubmitting}>
                 Use barcode
               </Button>
             </div>

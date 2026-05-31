@@ -1,4 +1,5 @@
 export * from "./auth-schema";
+export * from "./barcode-lookups";
 export * from "./categories";
 export * from "./entries";
 export * from "./product-hints";

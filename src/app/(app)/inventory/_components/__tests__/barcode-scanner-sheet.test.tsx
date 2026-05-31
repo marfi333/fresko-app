@@ -3,9 +3,20 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const mockUseBarcodeScanner = vi.fn();
+const mockTrigger = vi.fn();
 
 vi.mock("@/hooks/use-barcode-scanner", () => ({
   useBarcodeScanner: (...args: unknown[]) => mockUseBarcodeScanner(...args),
+}));
+
+vi.mock("web-haptics", () => ({
+  WebHaptics: class {
+    static isSupported = true;
+    trigger(...args: unknown[]) {
+      mockTrigger(...args);
+      return Promise.resolve();
+    }
+  },
 }));
 
 import { BarcodeScannerSheet } from "../barcode-scanner-sheet";
@@ -69,6 +80,46 @@ describe("BarcodeScannerSheet", () => {
     render(<BarcodeScannerSheet open={true} onOpenChange={onOpenChange} onResult={vi.fn()} />);
 
     await user.click(screen.getByRole("button", { name: /cancel/i }));
+    expect(onOpenChange).toHaveBeenCalledWith(false);
+  });
+
+  it("shows a 'Got it!' confirmation with the scanned code and triggers haptics", async () => {
+    let capturedOnResult: ((text: string) => void) | undefined;
+    mockUseBarcodeScanner.mockImplementation(({ onResult }: { onResult: (t: string) => void }) => {
+      capturedOnResult = onResult;
+      return defaultHookReturn;
+    });
+
+    render(<BarcodeScannerSheet open={true} onOpenChange={vi.fn()} onResult={vi.fn()} />);
+
+    capturedOnResult?.("5901234123457");
+
+    await waitFor(() => {
+      expect(screen.getByText(/got it/i)).toBeInTheDocument();
+      expect(screen.getByText("5901234123457")).toBeInTheDocument();
+    });
+    expect(mockTrigger).toHaveBeenCalledWith("success");
+  });
+
+  it("delays calling onResult and closing the sheet so the confirmation is visible", async () => {
+    let capturedOnResult: ((text: string) => void) | undefined;
+    mockUseBarcodeScanner.mockImplementation(({ onResult }: { onResult: (t: string) => void }) => {
+      capturedOnResult = onResult;
+      return defaultHookReturn;
+    });
+
+    const onResult = vi.fn();
+    const onOpenChange = vi.fn();
+    render(<BarcodeScannerSheet open={true} onOpenChange={onOpenChange} onResult={onResult} />);
+
+    capturedOnResult?.("5901234123457");
+
+    // Synchronously, onResult/close haven't fired yet.
+    expect(onResult).not.toHaveBeenCalled();
+    expect(onOpenChange).not.toHaveBeenCalled();
+
+    // After the delay, both fire.
+    await waitFor(() => expect(onResult).toHaveBeenCalledWith("5901234123457"));
     expect(onOpenChange).toHaveBeenCalledWith(false);
   });
 });

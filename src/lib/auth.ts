@@ -17,7 +17,7 @@ export const createAuth = (baseURL?: string) => {
             "https://192.168.*.*:*",
             "https://172.*.*.*:*",
           ]
-        : [],
+        : ["https://fresko.erkely.tech"],
     database: drizzleAdapter(getDb(), {
       provider: "sqlite",
       usePlural: false,

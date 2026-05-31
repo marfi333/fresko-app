@@ -1,5 +1,5 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
 import { NextResponse } from "next/server";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mockGetRequestContext = vi.fn();
 
@@ -52,9 +52,7 @@ describe("GET /api/entries", () => {
   });
 
   it("returns entries for the household", async () => {
-    const entries = [
-      { id: 1, productId: 1, quantity: 2, compartment: "fridge" },
-    ];
+    const entries = [{ id: 1, productId: 1, quantity: 2, compartment: "fridge" }];
     mockDb.orderBy.mockResolvedValue(entries);
 
     const request = new Request("http://localhost:3000/api/entries");
@@ -68,9 +66,7 @@ describe("GET /api/entries", () => {
   it("filters by compartment", async () => {
     mockDb.orderBy.mockResolvedValue([]);
 
-    const request = new Request(
-      "http://localhost:3000/api/entries?compartment=fridge"
-    );
+    const request = new Request("http://localhost:3000/api/entries?compartment=fridge");
     const response = await GET(request);
 
     expect(response.status).toBe(200);
@@ -80,9 +76,7 @@ describe("GET /api/entries", () => {
   it("filters by categoryId", async () => {
     mockDb.orderBy.mockResolvedValue([]);
 
-    const request = new Request(
-      "http://localhost:3000/api/entries?categoryId=3"
-    );
+    const request = new Request("http://localhost:3000/api/entries?categoryId=3");
     const response = await GET(request);
 
     expect(response.status).toBe(200);

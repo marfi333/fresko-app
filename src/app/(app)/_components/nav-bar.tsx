@@ -21,9 +21,7 @@ export function NavBar() {
               aria-current={isActive ? "page" : undefined}
               className={cn(
                 "flex min-h-11 flex-1 flex-col items-center justify-center gap-0.5 px-2 py-2 text-xs transition-colors",
-                isActive
-                  ? "text-primary"
-                  : "text-muted-foreground hover:text-foreground"
+                isActive ? "text-primary" : "text-muted-foreground hover:text-foreground"
               )}
             >
               <Icon className="size-5" />

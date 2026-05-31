@@ -18,11 +18,7 @@ interface CompartmentTabsProps {
 
 export function CompartmentTabs({ value, onChange }: CompartmentTabsProps) {
   return (
-    <Tabs
-      value={value}
-      onValueChange={(v) => onChange(v as Compartment)}
-      className="px-6"
-    >
+    <Tabs value={value} onValueChange={(v) => onChange(v as Compartment)} className="px-6">
       <TabsList className="w-full">
         {COMPARTMENTS.map((c) => (
           <TabsTrigger key={c.value} value={c.value} className="flex-1">

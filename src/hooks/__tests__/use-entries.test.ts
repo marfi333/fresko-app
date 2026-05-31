@@ -1,7 +1,7 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { renderHook, waitFor } from "@testing-library/react";
-import { useEntries } from "../use-entries";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createQueryWrapper } from "@/test/query-wrapper";
+import { useEntries } from "../use-entries";
 
 const mockFetch = vi.fn();
 globalThis.fetch = mockFetch;
@@ -40,10 +40,7 @@ describe("useEntries", () => {
     });
 
     const { wrapper } = createQueryWrapper();
-    const { result } = renderHook(
-      () => useEntries({ compartment: "fridge" }),
-      { wrapper }
-    );
+    const { result } = renderHook(() => useEntries({ compartment: "fridge" }), { wrapper });
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
@@ -57,10 +54,7 @@ describe("useEntries", () => {
     });
 
     const { wrapper } = createQueryWrapper();
-    const { result } = renderHook(
-      () => useEntries({ categoryId: 5 }),
-      { wrapper }
-    );
+    const { result } = renderHook(() => useEntries({ categoryId: 5 }), { wrapper });
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
@@ -74,16 +68,13 @@ describe("useEntries", () => {
     });
 
     const { wrapper } = createQueryWrapper();
-    const { result } = renderHook(
-      () => useEntries({ compartment: "pantry", categoryId: 2 }),
-      { wrapper }
-    );
+    const { result } = renderHook(() => useEntries({ compartment: "pantry", categoryId: 2 }), {
+      wrapper,
+    });
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
-    expect(mockFetch).toHaveBeenCalledWith(
-      "/api/entries?compartment=pantry&categoryId=2"
-    );
+    expect(mockFetch).toHaveBeenCalledWith("/api/entries?compartment=pantry&categoryId=2");
   });
 
   it("handles fetch errors", async () => {

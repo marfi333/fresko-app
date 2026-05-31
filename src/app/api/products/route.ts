@@ -1,5 +1,5 @@
+import { and, eq, like } from "drizzle-orm";
 import { NextResponse } from "next/server";
-import { eq, and, like } from "drizzle-orm";
 import { products } from "@/db/schema";
 import { getRequestContext } from "@/lib/api-utils";
 
@@ -37,17 +37,11 @@ export async function POST(request: Request) {
   };
 
   if (!body.name || !body.unit) {
-    return NextResponse.json(
-      { error: "name and unit are required" },
-      { status: 400 }
-    );
+    return NextResponse.json({ error: "name and unit are required" }, { status: 400 });
   }
 
   if (!VALID_UNITS.includes(body.unit as (typeof VALID_UNITS)[number])) {
-    return NextResponse.json(
-      { error: "Invalid unit" },
-      { status: 400 }
-    );
+    return NextResponse.json({ error: "Invalid unit" }, { status: 400 });
   }
 
   const [product] = await ctx.db

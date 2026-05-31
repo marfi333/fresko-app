@@ -1,14 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Check, LogOut, Pencil } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { LogOut, Check, Pencil } from "lucide-react";
-import { authClient, useSession } from "@/lib/auth-client";
-import { PageHeader } from "@/components/ui/page-header";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PageHeader } from "@/components/ui/page-header";
+import { authClient, useSession } from "@/lib/auth-client";
 
 interface ActiveOrg {
   id: string;
@@ -90,15 +90,11 @@ export default function ProfilePage() {
             ) : session?.user ? (
               <>
                 <div>
-                  <p className="text-xs font-medium text-muted-foreground">
-                    Name
-                  </p>
+                  <p className="text-xs font-medium text-muted-foreground">Name</p>
                   <p className="text-base">{session.user.name}</p>
                 </div>
                 <div>
-                  <p className="text-xs font-medium text-muted-foreground">
-                    Email
-                  </p>
+                  <p className="text-xs font-medium text-muted-foreground">Email</p>
                   <p className="text-base">{session.user.email}</p>
                 </div>
               </>
@@ -113,9 +109,7 @@ export default function ProfilePage() {
         <Card>
           <CardContent className="space-y-3 pt-6">
             <div className="flex items-center justify-between">
-              <p className="text-xs font-medium text-muted-foreground">
-                Household
-              </p>
+              <p className="text-xs font-medium text-muted-foreground">Household</p>
               {!orgLoading && activeOrg && !editingHousehold && (
                 <button
                   type="button"
@@ -131,9 +125,7 @@ export default function ProfilePage() {
             {orgLoading ? (
               <p className="text-sm text-muted-foreground">Loading…</p>
             ) : !activeOrg ? (
-              <p className="text-sm text-muted-foreground">
-                No active household
-              </p>
+              <p className="text-sm text-muted-foreground">No active household</p>
             ) : editingHousehold ? (
               <div className="space-y-2">
                 <Label htmlFor="household-name" className="sr-only">
@@ -180,12 +172,7 @@ export default function ProfilePage() {
       </div>
 
       <div className="px-6">
-        <Button
-          variant="outline"
-          className="w-full"
-          onClick={handleSignOut}
-          disabled={signingOut}
-        >
+        <Button variant="outline" className="w-full" onClick={handleSignOut} disabled={signingOut}>
           <LogOut className="mr-2 h-4 w-4" />
           {signingOut ? "Signing out…" : "Sign out"}
         </Button>

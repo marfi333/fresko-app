@@ -1,11 +1,9 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Card,
   CardContent,
@@ -14,6 +12,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 export function SignUpForm() {
   const router = useRouter();
@@ -57,9 +57,7 @@ export function SignUpForm() {
     <Card>
       <CardHeader>
         <CardTitle>Create your account</CardTitle>
-        <CardDescription>
-          Sign up to start managing your household inventory
-        </CardDescription>
+        <CardDescription>Sign up to start managing your household inventory</CardDescription>
       </CardHeader>
       <form onSubmit={handleSubmit}>
         <CardContent className="space-y-4">
@@ -102,10 +100,7 @@ export function SignUpForm() {
 
           <div className="space-y-2">
             <Label htmlFor="household">
-              Household name{" "}
-              <span className="text-muted-foreground font-normal">
-                (optional)
-              </span>
+              Household name <span className="text-muted-foreground font-normal">(optional)</span>
             </Label>
             <Input
               id="household"
@@ -128,10 +123,7 @@ export function SignUpForm() {
           </Button>
           <p className="text-muted-foreground text-center text-sm">
             Already have an account?{" "}
-            <Link
-              href="/sign-in"
-              className="text-primary underline-offset-4 hover:underline"
-            >
+            <Link href="/sign-in" className="text-primary underline-offset-4 hover:underline">
               Sign in
             </Link>
           </p>

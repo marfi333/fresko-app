@@ -1,5 +1,5 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
 import { NextResponse } from "next/server";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mockGetRequestContext = vi.fn();
 
@@ -7,7 +7,13 @@ vi.mock("@/lib/api-utils", () => ({
   getRequestContext: (...args: unknown[]) => mockGetRequestContext(...args),
 }));
 
-const existingEntry = { id: 1, productId: 1, quantity: 5, compartment: "fridge", householdId: "hh-1" };
+const existingEntry = {
+  id: 1,
+  productId: 1,
+  quantity: 5,
+  compartment: "fridge",
+  householdId: "hh-1",
+};
 
 const mockWhere = vi.fn();
 const mockReturning = vi.fn();
@@ -33,7 +39,7 @@ const mockDb = {
   })),
 };
 
-import { PATCH, DELETE } from "../route";
+import { DELETE, PATCH } from "../route";
 
 const params = Promise.resolve({ id: "1" });
 
@@ -47,9 +53,7 @@ describe("PATCH /api/entries/[id]", () => {
       userId: "user-1",
     });
     mockWhere.mockResolvedValue([existingEntry]);
-    mockReturning.mockResolvedValue([
-      { ...existingEntry, quantity: 3 },
-    ]);
+    mockReturning.mockResolvedValue([{ ...existingEntry, quantity: 3 }]);
   });
 
   it("returns 401 when not authenticated", async () => {

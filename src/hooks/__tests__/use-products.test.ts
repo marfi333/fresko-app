@@ -1,7 +1,7 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { renderHook, waitFor } from "@testing-library/react";
-import { useProducts } from "../use-products";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createQueryWrapper } from "@/test/query-wrapper";
+import { useProducts } from "../use-products";
 
 const mockFetch = vi.fn();
 globalThis.fetch = mockFetch;
@@ -16,9 +16,7 @@ describe("useProducts", () => {
   });
 
   it("fetches products without search param", async () => {
-    const products = [
-      { id: 1, name: "Milk", unit: "L", categoryId: 1, householdId: "hh-1" },
-    ];
+    const products = [{ id: 1, name: "Milk", unit: "L", categoryId: 1, householdId: "hh-1" }];
     mockFetch.mockResolvedValueOnce({
       ok: true,
       json: async () => products,

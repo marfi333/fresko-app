@@ -1,5 +1,5 @@
-import { NextResponse } from "next/server";
 import { eq } from "drizzle-orm";
+import { NextResponse } from "next/server";
 import { categories } from "@/db/schema";
 import { getRequestContext } from "@/lib/api-utils";
 
@@ -23,10 +23,7 @@ export async function POST(request: Request) {
   const body = (await request.json()) as { name?: string };
 
   if (!body.name) {
-    return NextResponse.json(
-      { error: "name is required" },
-      { status: 400 }
-    );
+    return NextResponse.json({ error: "name is required" }, { status: 400 });
   }
 
   const [category] = await ctx.db

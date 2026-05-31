@@ -1,7 +1,7 @@
 "use client";
 
-import Link from "next/link";
 import { Minus } from "lucide-react";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import type { AggregatedProduct } from "./inventory-list";
 
@@ -34,10 +34,7 @@ export function ProductRow({ item, showCompartments, onDecrease }: ProductRowPro
           <Minus className="h-4 w-4" />
         </Button>
       )}
-      <Link
-        href={`/inventory/${product.id}`}
-        className="flex flex-1 items-center gap-3 min-w-0"
-      >
+      <Link href={`/inventory/${product.id}`} className="flex flex-1 items-center gap-3 min-w-0">
         <div className="flex-1 min-w-0">
           <p className="text-sm font-medium truncate">{product.name}</p>
           <p className="text-xs text-muted-foreground">

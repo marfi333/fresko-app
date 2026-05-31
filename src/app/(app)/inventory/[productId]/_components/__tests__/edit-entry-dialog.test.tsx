@@ -1,11 +1,11 @@
-import { describe, it, expect, beforeAll, afterAll, afterEach, vi } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { server } from "@/mocks/server";
-import { http, HttpResponse } from "msw";
-import { EditEntryDialog } from "../edit-entry-dialog";
-import { createQueryWrapper } from "@/test/query-wrapper";
+import { HttpResponse, http } from "msw";
+import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import type { Entry } from "@/db/schema/entries";
+import { server } from "@/mocks/server";
+import { createQueryWrapper } from "@/test/query-wrapper";
+import { EditEntryDialog } from "../edit-entry-dialog";
 
 beforeAll(() => server.listen({ onUnhandledRequest: "error" }));
 afterEach(() => server.resetHandlers());
@@ -46,7 +46,10 @@ describe("EditEntryDialog", () => {
     let patchedWith: Record<string, unknown> | null = null;
     server.use(
       http.patch("/api/entries/:id", async ({ request, params }) => {
-        patchedWith = { id: Number(params.id), ...(await request.json()) as Record<string, unknown> };
+        patchedWith = {
+          id: Number(params.id),
+          ...((await request.json()) as Record<string, unknown>),
+        };
         return HttpResponse.json({ ...mockEntry, quantity: 4 });
       })
     );

@@ -1,5 +1,5 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
 import { NextResponse } from "next/server";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mockGetRequestContext = vi.fn();
 
@@ -14,9 +14,9 @@ const mockDb = {
   orderBy: vi.fn().mockResolvedValue([]),
   insert: vi.fn().mockReturnThis(),
   values: vi.fn().mockReturnThis(),
-  returning: vi.fn().mockResolvedValue([
-    { id: 1, name: "Milk", unit: "L", categoryId: 1, householdId: "hh-1" },
-  ]),
+  returning: vi
+    .fn()
+    .mockResolvedValue([{ id: 1, name: "Milk", unit: "L", categoryId: 1, householdId: "hh-1" }]),
 };
 
 import { GET, POST } from "../route";
@@ -43,9 +43,7 @@ describe("GET /api/products", () => {
   });
 
   it("returns products for the household", async () => {
-    const products = [
-      { id: 1, name: "Milk", unit: "L", categoryId: 1, householdId: "hh-1" },
-    ];
+    const products = [{ id: 1, name: "Milk", unit: "L", categoryId: 1, householdId: "hh-1" }];
     mockDb.orderBy.mockResolvedValue(products);
 
     const request = new Request("http://localhost:3000/api/products");
@@ -59,9 +57,7 @@ describe("GET /api/products", () => {
   it("supports search query parameter", async () => {
     mockDb.orderBy.mockResolvedValue([]);
 
-    const request = new Request(
-      "http://localhost:3000/api/products?search=milk"
-    );
+    const request = new Request("http://localhost:3000/api/products?search=milk");
     const response = await GET(request);
 
     expect(response.status).toBe(200);

@@ -1,15 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { useDecreaseQuantity } from "@/hooks/use-entry-mutations";
 import type { AggregatedProduct } from "./inventory-list";
 
@@ -27,7 +22,7 @@ export function DecreaseSheet({ item, open, onOpenChange }: DecreaseSheetProps) 
     e.preventDefault();
     if (!item) return;
     const qty = parseFloat(amount);
-    if (isNaN(qty) || qty <= 0) return;
+    if (Number.isNaN(qty) || qty <= 0) return;
 
     decrease.mutate(
       { productId: item.product.id, amount: qty },
@@ -75,11 +70,7 @@ export function DecreaseSheet({ item, open, onOpenChange }: DecreaseSheetProps) 
             >
               Cancel
             </Button>
-            <Button
-              type="submit"
-              className="flex-1"
-              disabled={decrease.isPending}
-            >
+            <Button type="submit" className="flex-1" disabled={decrease.isPending}>
               {decrease.isPending ? "Removing..." : "Confirm"}
             </Button>
           </div>

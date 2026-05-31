@@ -33,33 +33,23 @@ interface EntryFormProps {
   isSubmitting?: boolean;
 }
 
-export function EntryForm({
-  productChoice,
-  onSubmit,
-  onCancel,
-  isSubmitting,
-}: EntryFormProps) {
+export function EntryForm({ productChoice, onSubmit, onCancel, isSubmitting }: EntryFormProps) {
   const { data: categories } = useCategories();
 
   const isExisting = productChoice.type === "existing";
   const existingProduct = isExisting ? productChoice.product : null;
 
   const [quantity, setQuantity] = useState("1");
-  const [compartment, setCompartment] = useState<
-    "pantry" | "fridge" | "freezer"
-  >("pantry");
+  const [compartment, setCompartment] = useState<"pantry" | "fridge" | "freezer">("pantry");
   const [expiryDate, setExpiryDate] = useState("");
   const [unit, setUnit] = useState(
-    isExisting
-      ? existingProduct!.unit
-      : productChoice.suggestedUnit ?? "pieces"
+    isExisting ? existingProduct?.unit : (productChoice.suggestedUnit ?? "pieces")
   );
   const [categoryId, setCategoryId] = useState<number | undefined>(() => {
-    if (isExisting) return existingProduct!.categoryId ?? undefined;
+    if (isExisting) return existingProduct?.categoryId ?? undefined;
     if (productChoice.suggestedCategory && categories) {
       const match = categories.find(
-        (c) =>
-          c.name.toLowerCase() === productChoice.suggestedCategory!.toLowerCase()
+        (c) => c.name.toLowerCase() === productChoice.suggestedCategory?.toLowerCase()
       );
       return match?.id;
     }
@@ -69,7 +59,7 @@ export function EntryForm({
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     const qty = parseFloat(quantity);
-    if (isNaN(qty) || qty <= 0) return;
+    if (Number.isNaN(qty) || qty <= 0) return;
 
     onSubmit({
       productChoice,
@@ -84,17 +74,13 @@ export function EntryForm({
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
       <div className="space-y-1">
-        <span className="text-xs font-medium text-muted-foreground">
-          Product
-        </span>
+        <span className="text-xs font-medium text-muted-foreground">Product</span>
         <div className="flex items-baseline gap-2 rounded-md bg-secondary/50 px-3 py-2">
           <span className="text-base font-medium">
-            {isExisting ? existingProduct!.name : productChoice.name}
+            {isExisting ? existingProduct?.name : productChoice.name}
           </span>
           {isExisting && (
-            <span className="text-xs text-muted-foreground">
-              {existingProduct!.unit}
-            </span>
+            <span className="text-xs text-muted-foreground">{existingProduct?.unit}</span>
           )}
         </div>
       </div>
@@ -154,9 +140,7 @@ export function EntryForm({
         <Label htmlFor="compartment">Compartment</Label>
         <Select
           value={compartment}
-          onValueChange={(v) =>
-            setCompartment(v as "pantry" | "fridge" | "freezer")
-          }
+          onValueChange={(v) => setCompartment(v as "pantry" | "fridge" | "freezer")}
         >
           <SelectTrigger id="compartment">
             <SelectValue />

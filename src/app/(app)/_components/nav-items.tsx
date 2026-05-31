@@ -1,7 +1,7 @@
 "use client";
 
-import { Package, ShoppingCart, BarChart3, User } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
+import { BarChart3, Package, ShoppingCart, User } from "lucide-react";
 
 export interface NavItem {
   label: string;

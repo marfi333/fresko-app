@@ -1,5 +1,5 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
 import { NextResponse } from "next/server";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mockGetRequestContext = vi.fn();
 
@@ -44,9 +44,7 @@ describe("GET /api/product-hints", () => {
   });
 
   it("returns matching hints", async () => {
-    const hints = [
-      { id: 1, namePattern: "milk", suggestedUnit: "L", suggestedCategory: "Dairy" },
-    ];
+    const hints = [{ id: 1, namePattern: "milk", suggestedUnit: "L", suggestedCategory: "Dairy" }];
     mockDb.limit.mockResolvedValue(hints);
 
     const request = new Request("http://localhost:3000/api/product-hints?name=milk");

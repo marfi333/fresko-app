@@ -1,7 +1,7 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { renderHook, waitFor } from "@testing-library/react";
-import { useCategories } from "../use-categories";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createQueryWrapper } from "@/test/query-wrapper";
+import { useCategories } from "../use-categories";
 
 const mockFetch = vi.fn();
 globalThis.fetch = mockFetch;

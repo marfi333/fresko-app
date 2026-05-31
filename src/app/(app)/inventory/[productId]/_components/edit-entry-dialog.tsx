@@ -1,6 +1,8 @@
 "use client";
 
+import { Pencil } from "lucide-react";
 import { useState } from "react";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -8,7 +10,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -18,9 +19,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Pencil } from "lucide-react";
-import { useUpdateEntry } from "@/hooks/use-entry-mutations";
 import type { Entry } from "@/db/schema/entries";
+import { useUpdateEntry } from "@/hooks/use-entry-mutations";
 
 const COMPARTMENTS = ["pantry", "fridge", "freezer"] as const;
 
@@ -34,9 +34,7 @@ export function EditEntryDialog({ entry }: EditEntryDialogProps) {
   const [compartment, setCompartment] = useState(entry.compartment);
   const [expiryDate, setExpiryDate] = useState(() => {
     if (!entry.expiryDate) return "";
-    const d = entry.expiryDate instanceof Date
-      ? entry.expiryDate
-      : new Date(entry.expiryDate);
+    const d = entry.expiryDate instanceof Date ? entry.expiryDate : new Date(entry.expiryDate);
     return d.toISOString().split("T")[0];
   });
   const updateEntry = useUpdateEntry();
@@ -44,7 +42,7 @@ export function EditEntryDialog({ entry }: EditEntryDialogProps) {
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     const qty = parseFloat(quantity);
-    if (isNaN(qty) || qty <= 0) return;
+    if (Number.isNaN(qty) || qty <= 0) return;
 
     updateEntry.mutate(
       {
@@ -60,12 +58,7 @@ export function EditEntryDialog({ entry }: EditEntryDialogProps) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-7 w-7"
-          aria-label="Edit entry"
-        >
+        <Button variant="ghost" size="icon" className="h-7 w-7" aria-label="Edit entry">
           <Pencil className="h-3.5 w-3.5" />
         </Button>
       </DialogTrigger>
@@ -90,9 +83,7 @@ export function EditEntryDialog({ entry }: EditEntryDialogProps) {
             <Label htmlFor="edit-compartment">Compartment</Label>
             <Select
               value={compartment}
-              onValueChange={(v) =>
-                setCompartment(v as "pantry" | "fridge" | "freezer")
-              }
+              onValueChange={(v) => setCompartment(v as "pantry" | "fridge" | "freezer")}
             >
               <SelectTrigger id="edit-compartment">
                 <SelectValue />
@@ -127,11 +118,7 @@ export function EditEntryDialog({ entry }: EditEntryDialogProps) {
             >
               Cancel
             </Button>
-            <Button
-              type="submit"
-              className="flex-1"
-              disabled={updateEntry.isPending}
-            >
+            <Button type="submit" className="flex-1" disabled={updateEntry.isPending}>
               {updateEntry.isPending ? "Saving..." : "Save"}
             </Button>
           </div>

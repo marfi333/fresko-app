@@ -1,9 +1,9 @@
-import { describe, it, expect, beforeAll, afterAll, afterEach } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
+import { HttpResponse, http } from "msw";
+import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
 import { server } from "@/mocks/server";
-import { http, HttpResponse } from "msw";
-import { EntryList } from "../entry-list";
 import { createQueryWrapper } from "@/test/query-wrapper";
+import { EntryList } from "../entry-list";
 
 beforeAll(() => server.listen({ onUnhandledRequest: "error" }));
 afterEach(() => server.resetHandlers());
@@ -57,9 +57,7 @@ describe("EntryList", () => {
   });
 
   it("shows empty state when no entries", async () => {
-    server.use(
-      http.get("/api/entries", () => HttpResponse.json([]))
-    );
+    server.use(http.get("/api/entries", () => HttpResponse.json([])));
 
     const { wrapper } = createQueryWrapper();
     render(<EntryList productId={999} />, { wrapper });

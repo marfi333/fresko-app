@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { PageHeader } from "@/components/ui/page-header";
-import { CompartmentTabs, type Compartment } from "./_components/compartment-tabs";
 import { CategoryFilter } from "./_components/category-filter";
+import { type Compartment, CompartmentTabs } from "./_components/compartment-tabs";
 import { InventoryList } from "./_components/inventory-list";
 import { QuickAddFab } from "./_components/quick-add-fab";
 

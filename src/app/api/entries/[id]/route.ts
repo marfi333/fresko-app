@@ -1,5 +1,5 @@
+import { and, eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
-import { eq, and } from "drizzle-orm";
 import { entries, usageEvents } from "@/db/schema";
 import { getRequestContext } from "@/lib/api-utils";
 
@@ -32,11 +32,7 @@ export async function PATCH(request: Request, { params }: RouteParams) {
   const updates: Record<string, unknown> = {};
   if (body.quantity !== undefined) updates.quantity = body.quantity;
   if (body.compartment !== undefined) {
-    if (
-      !VALID_COMPARTMENTS.includes(
-        body.compartment as (typeof VALID_COMPARTMENTS)[number]
-      )
-    ) {
+    if (!VALID_COMPARTMENTS.includes(body.compartment as (typeof VALID_COMPARTMENTS)[number])) {
       return NextResponse.json({ error: "Invalid compartment" }, { status: 400 });
     }
     updates.compartment = body.compartment;

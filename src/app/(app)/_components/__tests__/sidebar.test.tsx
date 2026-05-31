@@ -11,12 +11,8 @@ describe("Sidebar", () => {
     render(<Sidebar />);
     expect(screen.getByRole("navigation")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /inventory/i })).toBeInTheDocument();
-    expect(
-      screen.getByRole("link", { name: /shopping/i })
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole("link", { name: /analytics/i })
-    ).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /shopping/i })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /analytics/i })).toBeInTheDocument();
   });
 
   it("highlights the active link", () => {

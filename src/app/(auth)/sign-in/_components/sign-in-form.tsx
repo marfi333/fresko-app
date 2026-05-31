@@ -1,12 +1,9 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { authClient } from "@/lib/auth-client";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Card,
   CardContent,
@@ -15,6 +12,9 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { authClient } from "@/lib/auth-client";
 
 export function SignInForm() {
   const router = useRouter();
@@ -97,10 +97,7 @@ export function SignInForm() {
           </Button>
           <p className="text-muted-foreground text-center text-sm">
             Don&apos;t have an account?{" "}
-            <Link
-              href="/sign-up"
-              className="text-primary underline-offset-4 hover:underline"
-            >
+            <Link href="/sign-up" className="text-primary underline-offset-4 hover:underline">
               Sign up
             </Link>
           </p>

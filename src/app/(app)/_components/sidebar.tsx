@@ -12,9 +12,7 @@ export function Sidebar() {
     <aside className="hidden w-64 shrink-0 border-r border-border bg-sidebar md:block">
       <div className="flex h-full flex-col">
         <div className="flex h-14 items-center border-b border-sidebar-border px-6">
-          <span className="text-lg font-semibold text-sidebar-foreground">
-            Fresko
-          </span>
+          <span className="text-lg font-semibold text-sidebar-foreground">Fresko</span>
         </div>
         <nav className="flex-1 space-y-1 p-3">
           {navItems.map((item) => {

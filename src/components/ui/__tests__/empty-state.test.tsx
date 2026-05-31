@@ -4,9 +4,7 @@ import { EmptyState } from "../empty-state";
 
 describe("EmptyState", () => {
   it("renders the title and description", () => {
-    render(
-      <EmptyState title="No items" description="Add your first item" />
-    );
+    render(<EmptyState title="No items" description="Add your first item" />);
     expect(screen.getByText("No items")).toBeInTheDocument();
     expect(screen.getByText("Add your first item")).toBeInTheDocument();
   });
@@ -16,7 +14,7 @@ describe("EmptyState", () => {
       <EmptyState
         title="Empty"
         description="Nothing here"
-        action={<button>Create</button>}
+        action={<button type="button">Create</button>}
       />
     );
     expect(screen.getByRole("button", { name: "Create" })).toBeInTheDocument();

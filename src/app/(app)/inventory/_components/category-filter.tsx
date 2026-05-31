@@ -1,7 +1,7 @@
 "use client";
 
-import { useCategories } from "@/hooks/use-categories";
 import { Button } from "@/components/ui/button";
+import { useCategories } from "@/hooks/use-categories";
 import { cn } from "@/lib/utils";
 
 interface CategoryFilterProps {

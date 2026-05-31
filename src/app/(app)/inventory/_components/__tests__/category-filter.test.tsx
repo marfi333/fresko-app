@@ -1,10 +1,10 @@
-import { describe, it, expect, beforeAll, afterAll, afterEach, vi } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { HttpResponse, http } from "msw";
+import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { server } from "@/mocks/server";
-import { http, HttpResponse } from "msw";
-import { CategoryFilter } from "../category-filter";
 import { createQueryWrapper } from "@/test/query-wrapper";
+import { CategoryFilter } from "../category-filter";
 
 beforeAll(() => server.listen({ onUnhandledRequest: "error" }));
 afterEach(() => server.resetHandlers());
@@ -15,10 +15,9 @@ describe("CategoryFilter", () => {
     server.use(http.get("/api/categories", () => HttpResponse.json([])));
 
     const { wrapper } = createQueryWrapper();
-    const { container } = render(
-      <CategoryFilter value={undefined} onChange={() => {}} />,
-      { wrapper }
-    );
+    const { container } = render(<CategoryFilter value={undefined} onChange={() => {}} />, {
+      wrapper,
+    });
 
     await waitFor(() => {
       expect(container.innerHTML).toBe("");
@@ -27,10 +26,7 @@ describe("CategoryFilter", () => {
 
   it("renders All chip plus category chips", async () => {
     const { wrapper } = createQueryWrapper();
-    render(
-      <CategoryFilter value={undefined} onChange={() => {}} />,
-      { wrapper }
-    );
+    render(<CategoryFilter value={undefined} onChange={() => {}} />, { wrapper });
 
     await waitFor(() => {
       expect(screen.getByRole("button", { name: "All" })).toBeInTheDocument();
@@ -45,10 +41,7 @@ describe("CategoryFilter", () => {
     const onChange = vi.fn();
     const user = userEvent.setup();
     const { wrapper } = createQueryWrapper();
-    render(
-      <CategoryFilter value={undefined} onChange={onChange} />,
-      { wrapper }
-    );
+    render(<CategoryFilter value={undefined} onChange={onChange} />, { wrapper });
 
     await waitFor(() => {
       expect(screen.getByRole("button", { name: "Dairy" })).toBeInTheDocument();
@@ -62,10 +55,7 @@ describe("CategoryFilter", () => {
     const onChange = vi.fn();
     const user = userEvent.setup();
     const { wrapper } = createQueryWrapper();
-    render(
-      <CategoryFilter value={1} onChange={onChange} />,
-      { wrapper }
-    );
+    render(<CategoryFilter value={1} onChange={onChange} />, { wrapper });
 
     await waitFor(() => {
       expect(screen.getByRole("button", { name: "All" })).toBeInTheDocument();

@@ -1,22 +1,13 @@
 "use client";
 
-import { useState } from "react";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
-import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
-import { useCreateEntry } from "@/hooks/use-entry-mutations";
 import { useQueryClient } from "@tanstack/react-query";
-import {
-  ProductAutocomplete,
-  type ProductChoice,
-} from "./product-autocomplete";
+import { Plus } from "lucide-react";
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { useCreateEntry } from "@/hooks/use-entry-mutations";
 import { EntryForm, type EntryFormData } from "./entry-form";
+import { ProductAutocomplete, type ProductChoice } from "./product-autocomplete";
 
 interface AddEntryDialogProps {
   open?: boolean;
@@ -37,9 +28,7 @@ export function AddEntryDialog({
     onOpenChange?.(next);
   };
 
-  const [productChoice, setProductChoice] = useState<ProductChoice | null>(
-    null
-  );
+  const [productChoice, setProductChoice] = useState<ProductChoice | null>(null);
   const createEntry = useCreateEntry();
   const queryClient = useQueryClient();
 
@@ -99,10 +88,7 @@ export function AddEntryDialog({
           </Button>
         </SheetTrigger>
       )}
-      <SheetContent
-        side="bottom"
-        className="h-[85vh] max-h-[85vh] overflow-y-auto rounded-t-xl"
-      >
+      <SheetContent side="bottom" className="h-[85vh] max-h-[85vh] overflow-y-auto rounded-t-xl">
         <SheetHeader>
           <SheetTitle>Add inventory entry</SheetTitle>
         </SheetHeader>

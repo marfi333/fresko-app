@@ -1,5 +1,5 @@
+import { and, eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
-import { eq, and } from "drizzle-orm";
 import { entries, products } from "@/db/schema";
 import { getRequestContext } from "@/lib/api-utils";
 
@@ -14,19 +14,13 @@ export async function GET(request: Request) {
   const categoryId = url.searchParams.get("categoryId");
   const productId = url.searchParams.get("productId");
 
-  const conditions: ReturnType<typeof eq>[] = [
-    eq(entries.householdId, ctx.householdId),
-  ];
+  const conditions: ReturnType<typeof eq>[] = [eq(entries.householdId, ctx.householdId)];
 
   if (
     compartment &&
-    VALID_COMPARTMENTS.includes(
-      compartment as (typeof VALID_COMPARTMENTS)[number]
-    )
+    VALID_COMPARTMENTS.includes(compartment as (typeof VALID_COMPARTMENTS)[number])
   ) {
-    conditions.push(
-      eq(entries.compartment, compartment as (typeof VALID_COMPARTMENTS)[number])
-    );
+    conditions.push(eq(entries.compartment, compartment as (typeof VALID_COMPARTMENTS)[number]));
   }
 
   if (productId) {
@@ -71,11 +65,7 @@ export async function POST(request: Request) {
     );
   }
 
-  if (
-    !VALID_COMPARTMENTS.includes(
-      body.compartment as (typeof VALID_COMPARTMENTS)[number]
-    )
-  ) {
+  if (!VALID_COMPARTMENTS.includes(body.compartment as (typeof VALID_COMPARTMENTS)[number])) {
     return NextResponse.json(
       { error: "Invalid compartment. Must be: pantry, fridge, or freezer" },
       { status: 400 }

@@ -1,5 +1,5 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
 import { NextResponse } from "next/server";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mockGetRequestContext = vi.fn();
 
@@ -14,9 +14,7 @@ const mockDb = {
   orderBy: vi.fn().mockResolvedValue([]),
   insert: vi.fn().mockReturnThis(),
   values: vi.fn().mockReturnThis(),
-  returning: vi.fn().mockResolvedValue([
-    { id: 1, name: "Dairy", householdId: "hh-1" },
-  ]),
+  returning: vi.fn().mockResolvedValue([{ id: 1, name: "Dairy", householdId: "hh-1" }]),
 };
 
 import { GET, POST } from "../route";

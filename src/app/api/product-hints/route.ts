@@ -1,5 +1,5 @@
-import { NextResponse } from "next/server";
 import { like } from "drizzle-orm";
+import { NextResponse } from "next/server";
 import { productHints } from "@/db/schema";
 import { getRequestContext } from "@/lib/api-utils";
 
@@ -11,10 +11,7 @@ export async function GET(request: Request) {
   const name = url.searchParams.get("name");
 
   if (!name) {
-    return NextResponse.json(
-      { error: "name query parameter is required" },
-      { status: 400 }
-    );
+    return NextResponse.json({ error: "name query parameter is required" }, { status: 400 });
   }
 
   const hints = await ctx.db

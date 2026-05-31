@@ -1,8 +1,8 @@
-import { http, HttpResponse } from "msw";
-import type { Product } from "@/db/schema/products";
-import type { Entry } from "@/db/schema/entries";
+import { HttpResponse, http } from "msw";
 import type { Category } from "@/db/schema/categories";
+import type { Entry } from "@/db/schema/entries";
 import type { ProductHint } from "@/db/schema/product-hints";
+import type { Product } from "@/db/schema/products";
 
 export const mockProducts: Product[] = [
   {
@@ -162,9 +162,7 @@ export const handlers = [
     if (!name) {
       return HttpResponse.json({ error: "name query parameter is required" }, { status: 400 });
     }
-    const filtered = mockProductHints.filter((h) =>
-      h.namePattern.includes(name.toLowerCase())
-    );
+    const filtered = mockProductHints.filter((h) => h.namePattern.includes(name.toLowerCase()));
     return HttpResponse.json(filtered);
   }),
 ];

@@ -1,12 +1,8 @@
 "use client";
 
+import { Barcode, Pencil, Plus } from "lucide-react";
 import { useState } from "react";
-import { Plus, Pencil, Barcode } from "lucide-react";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { AddEntryDialog } from "./add-entry-dialog";
 
 export function QuickAddFab() {
@@ -30,11 +26,7 @@ export function QuickAddFab() {
             <Plus className="h-6 w-6" />
           </button>
         </PopoverTrigger>
-        <PopoverContent
-          align="end"
-          sideOffset={8}
-          className="w-48 p-1"
-        >
+        <PopoverContent align="end" sideOffset={8} className="w-48 p-1">
           <button
             type="button"
             onClick={handleManual}
@@ -55,11 +47,7 @@ export function QuickAddFab() {
         </PopoverContent>
       </Popover>
 
-      <AddEntryDialog
-        open={sheetOpen}
-        onOpenChange={setSheetOpen}
-        showTrigger={false}
-      />
+      <AddEntryDialog open={sheetOpen} onOpenChange={setSheetOpen} showTrigger={false} />
     </>
   );
 }

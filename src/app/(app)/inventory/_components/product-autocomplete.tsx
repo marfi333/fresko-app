@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useRef } from "react";
-import { useProducts } from "@/hooks/use-products";
-import { useProductHints } from "@/hooks/use-product-hints";
+import { useRef, useState } from "react";
 import { Input } from "@/components/ui/input";
 import type { Product } from "@/db/schema/products";
+import { useProductHints } from "@/hooks/use-product-hints";
+import { useProducts } from "@/hooks/use-products";
 
 export interface ProductSelection {
   type: "existing";
@@ -25,10 +25,7 @@ interface ProductAutocompleteProps {
   disabled?: boolean;
 }
 
-export function ProductAutocomplete({
-  onSelect,
-  disabled,
-}: ProductAutocompleteProps) {
+export function ProductAutocomplete({ onSelect, disabled }: ProductAutocompleteProps) {
   const [search, setSearch] = useState("");
   const [showDropdown, setShowDropdown] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -86,9 +83,7 @@ export function ProductAutocomplete({
               onClick={() => handleSelect(product)}
             >
               <span className="flex-1 text-left">{product.name}</span>
-              <span className="text-xs text-muted-foreground">
-                {product.unit}
-              </span>
+              <span className="text-xs text-muted-foreground">{product.unit}</span>
             </button>
           ))}
           <button

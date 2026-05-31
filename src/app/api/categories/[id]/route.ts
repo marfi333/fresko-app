@@ -1,5 +1,5 @@
+import { and, eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
-import { eq, and } from "drizzle-orm";
 import { categories } from "@/db/schema";
 import { getRequestContext } from "@/lib/api-utils";
 
@@ -15,9 +15,7 @@ export async function PATCH(request: Request, { params }: RouteParams) {
   const [existing] = await ctx.db
     .select()
     .from(categories)
-    .where(
-      and(eq(categories.id, categoryId), eq(categories.householdId, ctx.householdId))
-    );
+    .where(and(eq(categories.id, categoryId), eq(categories.householdId, ctx.householdId)));
 
   if (!existing) {
     return NextResponse.json({ error: "Category not found" }, { status: 404 });
@@ -48,9 +46,7 @@ export async function DELETE(request: Request, { params }: RouteParams) {
   const [existing] = await ctx.db
     .select()
     .from(categories)
-    .where(
-      and(eq(categories.id, categoryId), eq(categories.householdId, ctx.householdId))
-    );
+    .where(and(eq(categories.id, categoryId), eq(categories.householdId, ctx.householdId)));
 
   if (!existing) {
     return NextResponse.json({ error: "Category not found" }, { status: 404 });

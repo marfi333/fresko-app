@@ -5,13 +5,11 @@ import { PageHeader } from "../page-header";
 describe("PageHeader", () => {
   it("renders the title", () => {
     render(<PageHeader title="Inventory" />);
-    expect(
-      screen.getByRole("heading", { name: "Inventory" })
-    ).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Inventory" })).toBeInTheDocument();
   });
 
   it("renders an optional action element", () => {
-    render(<PageHeader title="Test" action={<button>Add</button>} />);
+    render(<PageHeader title="Test" action={<button type="button">Add</button>} />);
     expect(screen.getByRole("button", { name: "Add" })).toBeInTheDocument();
   });
 

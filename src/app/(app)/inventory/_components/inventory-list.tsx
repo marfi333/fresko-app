@@ -1,15 +1,15 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { useProducts } from "@/hooks/use-products";
-import { useEntries } from "@/hooks/use-entries";
 import { EmptyState } from "@/components/ui/empty-state";
 import { SkeletonList } from "@/components/ui/skeleton-list";
-import { ProductRow } from "./product-row";
-import { DecreaseSheet } from "./decrease-sheet";
-import type { Compartment } from "./compartment-tabs";
-import type { Product } from "@/db/schema/products";
 import type { Entry } from "@/db/schema/entries";
+import type { Product } from "@/db/schema/products";
+import { useEntries } from "@/hooks/use-entries";
+import { useProducts } from "@/hooks/use-products";
+import type { Compartment } from "./compartment-tabs";
+import { DecreaseSheet } from "./decrease-sheet";
+import { ProductRow } from "./product-row";
 
 interface InventoryListProps {
   compartment: Compartment;
@@ -24,10 +24,7 @@ export interface AggregatedProduct {
   nearestExpiry: Date | null;
 }
 
-function aggregateByProduct(
-  products: Product[],
-  entries: Entry[]
-): AggregatedProduct[] {
+function aggregateByProduct(products: Product[], entries: Entry[]): AggregatedProduct[] {
   const productMap = new Map<number, Product>();
   for (const p of products) {
     productMap.set(p.id, p);

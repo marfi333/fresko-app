@@ -1,11 +1,11 @@
 "use client";
 
-import { useEntries } from "@/hooks/use-entries";
-import { SkeletonList } from "@/components/ui/skeleton-list";
 import { EmptyState } from "@/components/ui/empty-state";
+import { SkeletonList } from "@/components/ui/skeleton-list";
+import type { Entry } from "@/db/schema/entries";
+import { useEntries } from "@/hooks/use-entries";
 import { EditEntryDialog } from "./edit-entry-dialog";
 import { EntryActions } from "./entry-actions";
-import type { Entry } from "@/db/schema/entries";
 
 interface EntryListProps {
   productId: number;
@@ -25,9 +25,7 @@ function EntryRow({ entry }: { entry: Entry }) {
     <div className="flex items-center gap-3 px-6 py-3">
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
-          <span className="text-sm font-medium">
-            {entry.quantity}
-          </span>
+          <span className="text-sm font-medium">{entry.quantity}</span>
           <span className="inline-flex items-center rounded-full bg-secondary px-2 py-0.5 text-xs font-medium text-secondary-foreground">
             {COMPARTMENT_LABELS[entry.compartment]}
           </span>
@@ -37,8 +35,7 @@ function EntryRow({ entry }: { entry: Entry }) {
             <span
               className={`text-xs ${isExpired ? "text-destructive font-medium" : "text-muted-foreground"}`}
             >
-              {isExpired ? "Expired" : "Expires"}{" "}
-              {expiryDate.toLocaleDateString()}
+              {isExpired ? "Expired" : "Expires"} {expiryDate.toLocaleDateString()}
             </span>
           )}
         </div>
@@ -57,12 +54,7 @@ export function EntryList({ productId }: EntryListProps) {
   }
 
   if (!entries || entries.length === 0) {
-    return (
-      <EmptyState
-        title="No entries"
-        description="This product has no inventory entries."
-      />
-    );
+    return <EmptyState title="No entries" description="This product has no inventory entries." />;
   }
 
   return (

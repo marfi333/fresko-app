@@ -1,9 +1,9 @@
-import { describe, it, expect, beforeAll, afterAll, afterEach, vi } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
+import { HttpResponse, http } from "msw";
+import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { server } from "@/mocks/server";
-import { http, HttpResponse } from "msw";
-import { InventoryList } from "../inventory-list";
 import { createQueryWrapper } from "@/test/query-wrapper";
+import { InventoryList } from "../inventory-list";
 
 vi.mock("next/link", () => ({
   default: ({ children, href }: { children: React.ReactNode; href: string }) => (
@@ -36,9 +36,7 @@ describe("InventoryList", () => {
   });
 
   it("shows empty state when no entries exist", async () => {
-    server.use(
-      http.get("/api/entries", () => HttpResponse.json([]))
-    );
+    server.use(http.get("/api/entries", () => HttpResponse.json([])));
 
     const { wrapper } = createQueryWrapper();
     render(<InventoryList compartment="all" />, { wrapper });

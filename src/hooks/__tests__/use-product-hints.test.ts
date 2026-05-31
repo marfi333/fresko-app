@@ -1,7 +1,7 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { renderHook, waitFor } from "@testing-library/react";
-import { useProductHints } from "../use-product-hints";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createQueryWrapper } from "@/test/query-wrapper";
+import { useProductHints } from "../use-product-hints";
 
 const mockFetch = vi.fn();
 globalThis.fetch = mockFetch;
@@ -16,9 +16,7 @@ describe("useProductHints", () => {
   });
 
   it("fetches hints when name is at least 2 characters", async () => {
-    const hints = [
-      { id: 1, namePattern: "milk", suggestedUnit: "L", suggestedCategory: "Dairy" },
-    ];
+    const hints = [{ id: 1, namePattern: "milk", suggestedUnit: "L", suggestedCategory: "Dairy" }];
     mockFetch.mockResolvedValueOnce({
       ok: true,
       json: async () => hints,

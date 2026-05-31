@@ -1,10 +1,10 @@
 "use client";
 
-import { use } from "react";
 import Link from "next/link";
-import { useProducts } from "@/hooks/use-products";
-import { PageHeader } from "@/components/ui/page-header";
+import { use } from "react";
 import { Button } from "@/components/ui/button";
+import { PageHeader } from "@/components/ui/page-header";
+import { useProducts } from "@/hooks/use-products";
 import { EntryList } from "./_components/entry-list";
 
 interface ProductDetailPageProps {

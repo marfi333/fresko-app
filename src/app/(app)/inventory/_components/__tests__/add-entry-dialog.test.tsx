@@ -1,19 +1,15 @@
-import { describe, it, expect, beforeAll, afterAll, afterEach, vi } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { HttpResponse, http } from "msw";
+import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { server } from "@/mocks/server";
-import { http, HttpResponse } from "msw";
-import { AddEntryDialog } from "../add-entry-dialog";
 import { createQueryWrapper } from "@/test/query-wrapper";
+import { AddEntryDialog } from "../add-entry-dialog";
 
 vi.mock("next/link", () => ({
-  default: ({
-    children,
-    href,
-  }: {
-    children: React.ReactNode;
-    href: string;
-  }) => <a href={href}>{children}</a>,
+  default: ({ children, href }: { children: React.ReactNode; href: string }) => (
+    <a href={href}>{children}</a>
+  ),
 }));
 
 beforeAll(() => server.listen({ onUnhandledRequest: "error" }));

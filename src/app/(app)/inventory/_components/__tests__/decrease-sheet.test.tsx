@@ -1,10 +1,10 @@
-import { describe, it, expect, beforeAll, afterAll, afterEach, vi } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { HttpResponse, http } from "msw";
+import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { server } from "@/mocks/server";
-import { http, HttpResponse } from "msw";
-import { DecreaseSheet } from "../decrease-sheet";
 import { createQueryWrapper } from "@/test/query-wrapper";
+import { DecreaseSheet } from "../decrease-sheet";
 import type { AggregatedProduct } from "../inventory-list";
 
 beforeAll(() => server.listen({ onUnhandledRequest: "error" }));
@@ -38,10 +38,7 @@ describe("DecreaseSheet", () => {
 
   it("shows product name and current stock", () => {
     const { wrapper } = createQueryWrapper();
-    render(
-      <DecreaseSheet item={mockItem} open={true} onOpenChange={() => {}} />,
-      { wrapper }
-    );
+    render(<DecreaseSheet item={mockItem} open={true} onOpenChange={() => {}} />, { wrapper });
 
     expect(screen.getByText("Use Milk")).toBeInTheDocument();
     expect(screen.getByText("Current stock: 3 L")).toBeInTheDocument();
@@ -59,10 +56,7 @@ describe("DecreaseSheet", () => {
     const onOpenChange = vi.fn();
     const user = userEvent.setup();
     const { wrapper } = createQueryWrapper();
-    render(
-      <DecreaseSheet item={mockItem} open={true} onOpenChange={onOpenChange} />,
-      { wrapper }
-    );
+    render(<DecreaseSheet item={mockItem} open={true} onOpenChange={onOpenChange} />, { wrapper });
 
     const input = screen.getByLabelText("Amount to use");
     await user.clear(input);

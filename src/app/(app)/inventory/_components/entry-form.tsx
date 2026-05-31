@@ -32,16 +32,25 @@ type EntryFormProps = {
   onSubmit: (data: EntryFormData) => void;
   onCancel: () => void;
   isSubmitting?: boolean;
+  initialCompartment?: "pantry" | "fridge" | "freezer";
 };
 
-export const EntryForm = ({ productChoice, onSubmit, onCancel, isSubmitting }: EntryFormProps) => {
+export const EntryForm = ({
+  productChoice,
+  onSubmit,
+  onCancel,
+  isSubmitting,
+  initialCompartment,
+}: EntryFormProps) => {
   const { data: categories } = useCategories();
 
   const isExisting = productChoice.type === "existing";
   const existingProduct = isExisting ? productChoice.product : null;
 
   const [quantity, setQuantity] = useState("1");
-  const [compartment, setCompartment] = useState<"pantry" | "fridge" | "freezer">("pantry");
+  const [compartment, setCompartment] = useState<"pantry" | "fridge" | "freezer">(
+    initialCompartment ?? "pantry"
+  );
   const [expiryDate, setExpiryDate] = useState("");
   const [editedName, setEditedName] = useState(isExisting ? "" : productChoice.name);
   const [nameError, setNameError] = useState<string | null>(null);

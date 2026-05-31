@@ -90,6 +90,7 @@ export const SwipeRow = ({ children, actions, disabled = false }: SwipeRowProps)
   );
 
   const panelOpacity = useTransform(x, [-PANEL_WIDTH, 0], [1, 0]);
+  const panelPointerEvents = useTransform(x, (latest) => (latest < -1 ? "auto" : "none"));
 
   if (disabled) {
     return <div className="md:contents">{children}</div>;
@@ -99,7 +100,7 @@ export const SwipeRow = ({ children, actions, disabled = false }: SwipeRowProps)
     <div ref={containerRef} className="relative overflow-hidden md:overflow-visible">
       <motion.div
         className="absolute inset-y-0 right-0 flex items-stretch md:hidden"
-        style={{ width: PANEL_WIDTH, opacity: panelOpacity }}
+        style={{ width: PANEL_WIDTH, opacity: panelOpacity, pointerEvents: panelPointerEvents }}
       >
         {actions}
       </motion.div>

@@ -18,13 +18,13 @@ export const WasteCard = ({ data }: WasteCardProps) => {
 
   return (
     <Card>
-      <CardHeader className="pb-2">
+      <CardHeader className="p-4 pb-2">
         <CardTitle className="flex items-baseline justify-between text-base">
           <span>Waste</span>
           <span className="text-2xl font-semibold tabular-nums">{data.wastePct}%</span>
         </CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-4 pt-0">
         {total === 0 ? (
           <p className="py-4 text-center text-sm text-muted-foreground">
             No usage events in this range yet.

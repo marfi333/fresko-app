@@ -37,7 +37,7 @@ export const TrendChart = ({ data, categoryId, onCategoryChange }: TrendChartPro
 
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 p-4 pb-2">
         <CardTitle className="text-base">Consumption</CardTitle>
         <Select
           value={categoryId ? String(categoryId) : "all"}
@@ -56,7 +56,7 @@ export const TrendChart = ({ data, categoryId, onCategoryChange }: TrendChartPro
           </SelectContent>
         </Select>
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-4 pt-0">
         {totalSum === 0 ? (
           <EmptyState
             title="No consumption data"

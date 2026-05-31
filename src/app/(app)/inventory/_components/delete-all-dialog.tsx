@@ -1,15 +1,13 @@
 "use client";
 
+import { Button } from "@/components/ui/button";
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import { useDeleteAllProductEntries } from "@/hooks/use-entry-mutations";
 import type { AggregatedProduct } from "./inventory-list";
 
@@ -35,11 +33,11 @@ export const DeleteAllDialog = ({ item, open, onOpenChange, onDeleted }: DeleteA
   };
 
   return (
-    <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>Delete {item?.product.name}?</AlertDialogTitle>
-          <AlertDialogDescription>
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent side="bottom" className="rounded-t-xl">
+        <SheetHeader>
+          <SheetTitle>Delete {item?.product.name}?</SheetTitle>
+          <SheetDescription>
             {item ? (
               <>
                 This will remove {item.entries.length}{" "}
@@ -47,15 +45,27 @@ export const DeleteAllDialog = ({ item, open, onOpenChange, onDeleted }: DeleteA
                 {item.product.unit}.
               </>
             ) : null}
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel disabled={deleteAll.isPending}>Cancel</AlertDialogCancel>
-          <AlertDialogAction onClick={handleConfirm} disabled={deleteAll.isPending}>
+          </SheetDescription>
+        </SheetHeader>
+        <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            disabled={deleteAll.isPending}
+          >
+            Cancel
+          </Button>
+          <Button
+            type="button"
+            variant="destructive"
+            onClick={handleConfirm}
+            disabled={deleteAll.isPending}
+          >
             {deleteAll.isPending ? "Deleting…" : "Delete all"}
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+          </Button>
+        </div>
+      </SheetContent>
+    </Sheet>
   );
 };

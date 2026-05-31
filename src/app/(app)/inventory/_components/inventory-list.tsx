@@ -77,6 +77,9 @@ const aggregateByProduct = (products: Product[], entries: Entry[]): AggregatedPr
 export const InventoryList = ({ compartment, categoryId }: InventoryListProps) => {
   const [decreaseItem, setDecreaseItem] = useState<AggregatedProduct | null>(null);
   const [addChoice, setAddChoice] = useState<ProductChoice | null>(null);
+  const [addCompartment, setAddCompartment] = useState<"pantry" | "fridge" | "freezer" | undefined>(
+    undefined
+  );
   const [editItem, setEditItem] = useState<AggregatedProduct | null>(null);
   const [editingEntry, setEditingEntry] = useState<Entry | null>(null);
   const [deleteItem, setDeleteItem] = useState<AggregatedProduct | null>(null);
@@ -142,7 +145,12 @@ export const InventoryList = ({ compartment, categoryId }: InventoryListProps) =
               item={item}
               showCompartments={compartment === "all"}
               onDecrease={setDecreaseItem}
-              onAdd={(target) => setAddChoice({ type: "existing", product: target.product })}
+              onAdd={(target) => {
+                setAddChoice({ type: "existing", product: target.product });
+                setAddCompartment(
+                  compartment === "all" ? Array.from(target.compartments)[0] : compartment
+                );
+              }}
             />
           </SwipeRow>
         ))}
@@ -157,10 +165,14 @@ export const InventoryList = ({ compartment, categoryId }: InventoryListProps) =
       <AddEntryDialog
         open={!!addChoice}
         onOpenChange={(open) => {
-          if (!open) setAddChoice(null);
+          if (!open) {
+            setAddChoice(null);
+            setAddCompartment(undefined);
+          }
         }}
         showTrigger={false}
         initialProductChoice={addChoice}
+        initialCompartment={addCompartment}
       />
       <EntryPickerDrawer
         item={editItem}

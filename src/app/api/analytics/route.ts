@@ -9,13 +9,16 @@ type TopRow = { productId: number; name: string; total: number; unit: string | n
 type WasteRow = { reason: "consumed" | "expired" | "discarded" | "corrected"; count: number };
 
 const bucketSqlExpression = (granularity: "day" | "week" | "month") => {
-  const ts = sql`${usageEvents.timestamp} / 1000`;
+  // usageEvents.timestamp is `mode: 'timestamp'` → seconds since epoch.
+  // strftime('…', ts, 'unixepoch') already expects seconds, so use the raw column.
+  const ts = sql`${usageEvents.timestamp}`;
   switch (granularity) {
     case "day":
       return sql<string>`strftime('%Y-%m-%d', ${ts}, 'unixepoch')`;
     case "week":
-      // ISO-week-style key: YYYY-Www
-      return sql<string>`strftime('%Y-W%W', ${ts}, 'unixepoch')`;
+      // ISO 8601 week-year + week, matching JS-side isoWeek() in src/lib/analytics/range.ts.
+      // SQLite's %W is week-of-year (Mon start) which does NOT match ISO weeks.
+      return sql<string>`strftime('%G-W%V', ${ts}, 'unixepoch')`;
     case "month":
       return sql<string>`strftime('%Y-%m', ${ts}, 'unixepoch')`;
   }

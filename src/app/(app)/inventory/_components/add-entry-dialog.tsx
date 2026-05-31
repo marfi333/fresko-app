@@ -14,6 +14,7 @@ type AddEntryDialogProps = {
   onOpenChange?: (open: boolean) => void;
   showTrigger?: boolean;
   initialProductChoice?: ProductChoice | null;
+  initialCompartment?: "pantry" | "fridge" | "freezer";
 };
 
 export const AddEntryDialog = ({
@@ -21,6 +22,7 @@ export const AddEntryDialog = ({
   onOpenChange,
   showTrigger = true,
   initialProductChoice = null,
+  initialCompartment,
 }: AddEntryDialogProps = {}) => {
   const [uncontrolledOpen, setUncontrolledOpen] = useState(false);
   const isControlled = controlledOpen !== undefined;
@@ -108,6 +110,7 @@ export const AddEntryDialog = ({
               onSubmit={handleSubmit}
               onCancel={handleReset}
               isSubmitting={createEntry.isPending}
+              initialCompartment={initialCompartment}
             />
           )}
         </div>

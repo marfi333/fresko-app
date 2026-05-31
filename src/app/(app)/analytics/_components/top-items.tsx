@@ -17,10 +17,10 @@ export const TopItems = ({ data }: TopItemsProps) => {
 
   return (
     <Card>
-      <CardHeader className="pb-2">
+      <CardHeader className="p-4 pb-2">
         <CardTitle className="text-base">Top consumed</CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-4 pt-0">
         {data.length === 0 ? (
           <EmptyState title="No items yet" description="Consume something to populate this list." />
         ) : (

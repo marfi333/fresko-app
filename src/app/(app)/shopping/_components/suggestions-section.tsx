@@ -22,7 +22,7 @@ export const SuggestionsSection = () => {
         {suggestions.map((s) => (
           <li
             key={s.productId}
-            className="flex items-center justify-between rounded-md bg-card px-2 py-1.5"
+            className="flex items-center justify-between rounded-md bg-card px-2 pl-3 py-1.5"
           >
             <span className="text-sm">{s.name}</span>
             <Button

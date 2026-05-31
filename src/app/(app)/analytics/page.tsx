@@ -26,7 +26,7 @@ const AnalyticsPageInner = () => {
     <div className="flex flex-col gap-4">
       <PageHeader title="Analytics" description="Consumption insights for your household" />
 
-      <div className="flex flex-col gap-4 px-4">
+      <div className="flex flex-col gap-4 px-4 pb-12">
         <RangeSelector value={range} onChange={setRange} />
 
         {isLoading && !data ? (

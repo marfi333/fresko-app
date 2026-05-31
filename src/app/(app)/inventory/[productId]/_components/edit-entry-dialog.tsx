@@ -3,13 +3,6 @@
 import { Pencil } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -19,6 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import type { Entry } from "@/db/schema/entries";
 import { useUpdateEntry } from "@/hooks/use-entry-mutations";
 
@@ -70,19 +64,19 @@ export const EditEntryDialog = ({
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Sheet open={open} onOpenChange={setOpen}>
       {showTrigger && (
-        <DialogTrigger asChild>
+        <SheetTrigger asChild>
           <Button variant="ghost" size="icon" className="h-7 w-7" aria-label="Edit entry">
             <Pencil className="h-3.5 w-3.5" />
           </Button>
-        </DialogTrigger>
+        </SheetTrigger>
       )}
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Edit entry</DialogTitle>
-        </DialogHeader>
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+      <SheetContent side="bottom" className="max-h-[85vh] overflow-y-auto rounded-t-xl">
+        <SheetHeader>
+          <SheetTitle>Edit entry</SheetTitle>
+        </SheetHeader>
+        <form onSubmit={handleSubmit} className="mt-4 flex flex-col gap-4">
           <div className="space-y-2">
             <Label htmlFor="edit-quantity">Quantity</Label>
             <Input
@@ -139,7 +133,7 @@ export const EditEntryDialog = ({
             </Button>
           </div>
         </form>
-      </DialogContent>
-    </Dialog>
+      </SheetContent>
+    </Sheet>
   );
 };

@@ -19,6 +19,7 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:studio": "drizzle-kit studio",
+    "icons:generate": "node scripts/generate-favicons.mjs",
     "prepare": "husky"
   },
   "lint-staged": {
@@ -54,6 +55,8 @@
   },
   "devDependencies": {
     "@biomejs/biome": "2.4.16",
+    "@realfavicongenerator/generate-favicon": "^0.8.3",
+    "@realfavicongenerator/image-adapter-node": "^0.8.3",
     "@tailwindcss/postcss": "^4",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",

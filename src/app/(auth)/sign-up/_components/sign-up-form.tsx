@@ -15,7 +15,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-export function SignUpForm() {
+export const SignUpForm = () => {
   const router = useRouter();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -24,7 +24,7 @@ export function SignUpForm() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  async function handleSubmit(e: React.FormEvent) {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setLoading(true);
@@ -51,7 +51,7 @@ export function SignUpForm() {
     } finally {
       setLoading(false);
     }
-  }
+  };
 
   return (
     <Card>
@@ -131,4 +131,4 @@ export function SignUpForm() {
       </form>
     </Card>
   );
-}
+};

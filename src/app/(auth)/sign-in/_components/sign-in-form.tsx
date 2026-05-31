@@ -16,14 +16,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { authClient } from "@/lib/auth-client";
 
-export function SignInForm() {
+export const SignInForm = () => {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  async function handleSubmit(e: React.FormEvent) {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setLoading(true);
@@ -51,7 +51,7 @@ export function SignInForm() {
     } finally {
       setLoading(false);
     }
-  }
+  };
 
   return (
     <Card>
@@ -105,4 +105,4 @@ export function SignInForm() {
       </form>
     </Card>
   );
-}
+};

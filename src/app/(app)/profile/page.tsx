@@ -10,10 +10,10 @@ import { Label } from "@/components/ui/label";
 import { PageHeader } from "@/components/ui/page-header";
 import { authClient, useSession } from "@/lib/auth-client";
 
-interface ActiveOrg {
+type ActiveOrg = {
   id: string;
   name: string;
-}
+};
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -29,7 +29,7 @@ export default function ProfilePage() {
 
   useEffect(() => {
     let cancelled = false;
-    async function load() {
+    const load = async () => {
       const { data } = await authClient.organization.getFullOrganization();
       if (cancelled) return;
       if (data) {
@@ -37,20 +37,20 @@ export default function ProfilePage() {
         setHouseholdName(data.name);
       }
       setOrgLoading(false);
-    }
+    };
     load();
     return () => {
       cancelled = true;
     };
   }, []);
 
-  async function handleSignOut() {
+  const handleSignOut = async () => {
     setSigningOut(true);
     await authClient.signOut();
     router.push("/sign-in");
-  }
+  };
 
-  async function handleSaveHousehold() {
+  const handleSaveHousehold = async () => {
     if (!activeOrg) return;
     const trimmed = householdName.trim();
     if (!trimmed) {
@@ -70,13 +70,13 @@ export default function ProfilePage() {
     }
     if (data) setActiveOrg({ id: data.id, name: data.name });
     setEditingHousehold(false);
-  }
+  };
 
-  function handleCancelHouseholdEdit() {
+  const handleCancelHouseholdEdit = () => {
     setHouseholdName(activeOrg?.name ?? "");
     setHouseholdError("");
     setEditingHousehold(false);
-  }
+  };
 
   return (
     <div className="flex flex-col gap-4">

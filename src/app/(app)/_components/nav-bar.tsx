@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { navItems } from "./nav-items";
 
-export function NavBar() {
+export const NavBar = () => {
   const pathname = usePathname();
 
   return (
@@ -32,4 +32,4 @@ export function NavBar() {
       </div>
     </nav>
   );
-}
+};

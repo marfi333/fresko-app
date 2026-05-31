@@ -3,11 +3,11 @@
 import type { LucideIcon } from "lucide-react";
 import { BarChart3, Package, ShoppingCart, User } from "lucide-react";
 
-export interface NavItem {
+export type NavItem = {
   label: string;
   href: string;
   icon: LucideIcon;
-}
+};
 
 export const navItems: NavItem[] = [
   { label: "Inventory", href: "/inventory", icon: Package },

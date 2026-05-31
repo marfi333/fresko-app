@@ -2,6 +2,7 @@ import { relations } from "drizzle-orm";
 import { categories } from "./categories";
 import { entries } from "./entries";
 import { products } from "./products";
+import { shoppingItems } from "./shopping-items";
 import { usageEvents } from "./usage-events";
 
 export const categoriesRelations = relations(categories, ({ many }) => ({
@@ -15,6 +16,14 @@ export const productsRelations = relations(products, ({ one, many }) => ({
   }),
   entries: many(entries),
   usageEvents: many(usageEvents),
+  shoppingItems: many(shoppingItems),
+}));
+
+export const shoppingItemsRelations = relations(shoppingItems, ({ one }) => ({
+  product: one(products, {
+    fields: [shoppingItems.productId],
+    references: [products.id],
+  }),
 }));
 
 export const entriesRelations = relations(entries, ({ one, many }) => ({

@@ -12,7 +12,7 @@ type RequestContextSuccess = {
 
 export type RequestContext = RequestContextError | RequestContextSuccess;
 
-export async function getRequestContext(request: Request): Promise<RequestContext> {
+export const getRequestContext = async (request: Request): Promise<RequestContext> => {
   const auth = createAuth(new URL(request.url).origin);
   const db = getDb();
 
@@ -37,4 +37,4 @@ export async function getRequestContext(request: Request): Promise<RequestContex
   }
 
   return { db, session, householdId, userId: session.user.id };
-}
+};

@@ -31,7 +31,7 @@ const PRODUCT_HINTS = [
   { namePattern: "canned", suggestedUnit: "pieces", suggestedCategory: "Canned Goods" },
 ] as const;
 
-export async function seedProductHints(db: Database) {
+export const seedProductHints = async (db: Database) => {
   await db.insert(productHints).values(
     PRODUCT_HINTS.map((hint) => ({
       namePattern: hint.namePattern,
@@ -39,4 +39,4 @@ export async function seedProductHints(db: Database) {
       suggestedCategory: hint.suggestedCategory,
     }))
   );
-}
+};

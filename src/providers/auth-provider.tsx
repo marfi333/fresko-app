@@ -3,15 +3,15 @@
 import type { ReactNode } from "react";
 import { useSession } from "@/hooks/use-session";
 
-interface AuthProviderProps {
+type AuthProviderProps = {
   children: ReactNode;
-}
+};
 
-export function AuthProvider({ children }: AuthProviderProps) {
+export const AuthProvider = ({ children }: AuthProviderProps) => {
   return <>{children}</>;
-}
+};
 
-export function useRequireAuth() {
+export const useRequireAuth = () => {
   const session = useSession();
   return session;
-}
+};

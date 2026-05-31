@@ -6,7 +6,7 @@ import * as schema from "./schema";
 
 let cached: ReturnType<typeof drizzle<typeof schema>> | null = null;
 
-export function getDb() {
+export const getDb = () => {
   if (cached) return cached;
   const path = process.env.DATABASE_PATH ?? "./data/fresko.db";
   if (path !== ":memory:") {
@@ -17,6 +17,6 @@ export function getDb() {
   sqlite.pragma("foreign_keys = ON");
   cached = drizzle(sqlite, { schema });
   return cached;
-}
+};
 
 export type Database = ReturnType<typeof getDb>;

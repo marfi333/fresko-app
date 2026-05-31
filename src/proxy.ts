@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 
 const PUBLIC_PATHS = ["/sign-in", "/sign-up", "/api/auth", "/api/sign-up", "/api/health"];
 
-export function proxy(request: NextRequest) {
+export const proxy = (request: NextRequest) => {
   const { pathname } = request.nextUrl;
 
   if (PUBLIC_PATHS.some((path) => pathname.startsWith(path))) {
@@ -19,7 +19,7 @@ export function proxy(request: NextRequest) {
   }
 
   return NextResponse.next();
-}
+};
 
 export const config = {
   matcher: ["/((?!_next/static|_next/image|favicon.ico|api/households).*)"],

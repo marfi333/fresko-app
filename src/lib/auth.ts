@@ -4,7 +4,7 @@ import { nextCookies } from "better-auth/next-js";
 import { organization } from "better-auth/plugins";
 import { getDb } from "@/db";
 
-export function createAuth(baseURL?: string) {
+export const createAuth = (baseURL?: string) => {
   return betterAuth({
     baseURL,
     database: drizzleAdapter(getDb(), {
@@ -21,6 +21,6 @@ export function createAuth(baseURL?: string) {
       nextCookies(),
     ],
   });
-}
+};
 
 export type Auth = ReturnType<typeof createAuth>;

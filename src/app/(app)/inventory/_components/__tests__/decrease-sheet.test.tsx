@@ -18,6 +18,7 @@ const mockItem: AggregatedProduct = {
     unit: "L",
     categoryId: 1,
     householdId: "hh-1",
+    barcode: null,
     createdAt: new Date("2026-05-20"),
   },
   totalQuantity: 3,

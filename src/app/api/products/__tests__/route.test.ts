@@ -112,4 +112,40 @@ describe("POST /api/products", () => {
     const response = await POST(request);
     expect(response.status).toBe(400);
   });
+
+  it("persists an optional barcode when provided", async () => {
+    const request = new Request("http://localhost:3000/api/products", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name: "Milk", unit: "L", barcode: "5901234123457" }),
+    });
+    const response = await POST(request);
+
+    expect(response.status).toBe(201);
+    expect(mockDb.values).toHaveBeenCalledWith(
+      expect.objectContaining({ barcode: "5901234123457" })
+    );
+  });
+
+  it("returns 400 for an invalid barcode (non 8/12/13 digits)", async () => {
+    const request = new Request("http://localhost:3000/api/products", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name: "Milk", unit: "L", barcode: "abc" }),
+    });
+    const response = await POST(request);
+    expect(response.status).toBe(400);
+  });
+
+  it("treats omitted barcode as null", async () => {
+    const request = new Request("http://localhost:3000/api/products", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name: "Milk", unit: "L" }),
+    });
+    const response = await POST(request);
+
+    expect(response.status).toBe(201);
+    expect(mockDb.values).toHaveBeenCalledWith(expect.objectContaining({ barcode: null }));
+  });
 });

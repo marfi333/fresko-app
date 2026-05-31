@@ -1,0 +1,2 @@
+ALTER TABLE `products` ADD `barcode` text;--> statement-breakpoint
+CREATE UNIQUE INDEX `products_household_barcode_uidx` ON `products` (`household_id`,`barcode`) WHERE "products"."barcode" IS NOT NULL;

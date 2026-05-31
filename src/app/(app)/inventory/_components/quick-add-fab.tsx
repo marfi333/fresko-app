@@ -1,17 +1,38 @@
 "use client";
 
 import { Barcode, Pencil, Plus } from "lucide-react";
+import dynamic from "next/dynamic";
 import { useState } from "react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { useScanFlow } from "@/hooks/use-scan-flow";
 import { AddEntryDialog } from "./add-entry-dialog";
+
+const BarcodeScannerSheet = dynamic(
+  () => import("./barcode-scanner-sheet").then((m) => m.BarcodeScannerSheet),
+  { ssr: false }
+);
 
 export const QuickAddFab = () => {
   const [menuOpen, setMenuOpen] = useState(false);
-  const [sheetOpen, setSheetOpen] = useState(false);
+  const {
+    scannerOpen,
+    setScannerOpen,
+    seededChoice,
+    entryDialogOpen,
+    openScanner,
+    openManual,
+    handleScanResult,
+    handleEntryDialogOpenChange,
+  } = useScanFlow();
 
-  const handleManual = () => {
+  const handleManualClick = () => {
     setMenuOpen(false);
-    setSheetOpen(true);
+    openManual();
+  };
+
+  const handleScanClick = () => {
+    setMenuOpen(false);
+    openScanner();
   };
 
   return (
@@ -29,7 +50,7 @@ export const QuickAddFab = () => {
         <PopoverContent align="end" side="top" sideOffset={8} className="w-48 p-1">
           <button
             type="button"
-            onClick={handleManual}
+            onClick={handleManualClick}
             className="flex w-full items-center gap-3 rounded-sm px-3 py-2 text-left text-sm hover:bg-accent hover:text-accent-foreground"
           >
             <Pencil className="h-4 w-4" />
@@ -37,9 +58,8 @@ export const QuickAddFab = () => {
           </button>
           <button
             type="button"
-            disabled
-            className="flex w-full items-center gap-3 rounded-sm px-3 py-2 text-left text-sm text-muted-foreground opacity-60"
-            title="Coming soon"
+            onClick={handleScanClick}
+            className="flex w-full items-center gap-3 rounded-sm px-3 py-2 text-left text-sm hover:bg-accent hover:text-accent-foreground"
           >
             <Barcode className="h-4 w-4" />
             Scan barcode
@@ -47,7 +67,18 @@ export const QuickAddFab = () => {
         </PopoverContent>
       </Popover>
 
-      <AddEntryDialog open={sheetOpen} onOpenChange={setSheetOpen} showTrigger={false} />
+      <BarcodeScannerSheet
+        open={scannerOpen}
+        onOpenChange={setScannerOpen}
+        onResult={handleScanResult}
+      />
+
+      <AddEntryDialog
+        open={entryDialogOpen}
+        onOpenChange={handleEntryDialogOpenChange}
+        showTrigger={false}
+        initialProductChoice={seededChoice}
+      />
     </>
   );
 };

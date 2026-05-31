@@ -2,7 +2,7 @@
 
 import { useQueryClient } from "@tanstack/react-query";
 import { Plus } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { useCreateEntry } from "@/hooks/use-entry-mutations";
@@ -13,12 +13,14 @@ type AddEntryDialogProps = {
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
   showTrigger?: boolean;
+  initialProductChoice?: ProductChoice | null;
 };
 
 export const AddEntryDialog = ({
   open: controlledOpen,
   onOpenChange,
   showTrigger = true,
+  initialProductChoice = null,
 }: AddEntryDialogProps = {}) => {
   const [uncontrolledOpen, setUncontrolledOpen] = useState(false);
   const isControlled = controlledOpen !== undefined;
@@ -28,7 +30,11 @@ export const AddEntryDialog = ({
     onOpenChange?.(next);
   };
 
-  const [productChoice, setProductChoice] = useState<ProductChoice | null>(null);
+  const [productChoice, setProductChoice] = useState<ProductChoice | null>(initialProductChoice);
+
+  useEffect(() => {
+    if (open) setProductChoice(initialProductChoice);
+  }, [open, initialProductChoice]);
   const createEntry = useCreateEntry();
   const queryClient = useQueryClient();
 
@@ -54,6 +60,7 @@ export const AddEntryDialog = ({
           name: data.productChoice.name,
           unit: data.unit,
           categoryId: data.categoryId,
+          ...(data.barcode ? { barcode: data.barcode } : {}),
         }),
       });
       if (!res.ok) {

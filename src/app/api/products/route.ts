@@ -4,6 +4,7 @@ import { products } from "@/db/schema";
 import { getRequestContext } from "@/lib/api-utils";
 
 const VALID_UNITS = ["mL", "L", "g", "kg", "pieces", "packs"] as const;
+const BARCODE_PATTERN = /^(\d{8}|\d{12}|\d{13})$/;
 
 export const GET = async (request: Request) => {
   const ctx = await getRequestContext(request);
@@ -34,6 +35,7 @@ export const POST = async (request: Request) => {
     name?: string;
     unit?: string;
     categoryId?: number;
+    barcode?: string | null;
   };
 
   if (!body.name || !body.unit) {
@@ -44,6 +46,10 @@ export const POST = async (request: Request) => {
     return NextResponse.json({ error: "Invalid unit" }, { status: 400 });
   }
 
+  if (body.barcode != null && body.barcode !== "" && !BARCODE_PATTERN.test(body.barcode)) {
+    return NextResponse.json({ error: "Invalid barcode" }, { status: 400 });
+  }
+
   const [product] = await ctx.db
     .insert(products)
     .values({
@@ -51,6 +57,7 @@ export const POST = async (request: Request) => {
       unit: body.unit as (typeof VALID_UNITS)[number],
       categoryId: body.categoryId ?? null,
       householdId: ctx.householdId,
+      barcode: body.barcode ? body.barcode : null,
     })
     .returning();
 

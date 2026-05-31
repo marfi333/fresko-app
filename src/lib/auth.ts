@@ -9,7 +9,14 @@ export const createAuth = (baseURL?: string) => {
     baseURL,
     trustedOrigins:
       process.env.NODE_ENV === "development"
-        ? ["http://10.*.*.*:*", "http://192.168.*.*:*", "http://172.*.*.*:*"]
+        ? [
+            "http://10.*.*.*:*",
+            "http://192.168.*.*:*",
+            "http://172.*.*.*:*",
+            "https://10.*.*.*:*",
+            "https://192.168.*.*:*",
+            "https://172.*.*.*:*",
+          ]
         : [],
     database: drizzleAdapter(getDb(), {
       provider: "sqlite",

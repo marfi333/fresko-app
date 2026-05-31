@@ -16,6 +16,7 @@ export type NewProductSelection = {
   name: string;
   suggestedUnit?: string;
   suggestedCategory?: string;
+  barcode?: string;
 };
 
 export type ProductChoice = ProductSelection | NewProductSelection;

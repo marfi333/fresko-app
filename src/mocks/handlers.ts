@@ -11,6 +11,7 @@ export const mockProducts: Product[] = [
     unit: "L",
     categoryId: 1,
     householdId: "hh-1",
+    barcode: null,
     createdAt: new Date("2026-05-01"),
   },
   {
@@ -19,6 +20,7 @@ export const mockProducts: Product[] = [
     unit: "kg",
     categoryId: 2,
     householdId: "hh-1",
+    barcode: null,
     createdAt: new Date("2026-05-01"),
   },
   {
@@ -27,6 +29,7 @@ export const mockProducts: Product[] = [
     unit: "pieces",
     categoryId: 3,
     householdId: "hh-1",
+    barcode: null,
     createdAt: new Date("2026-05-01"),
   },
 ];
@@ -96,6 +99,7 @@ export const handlers = [
       unit: body.unit as Product["unit"],
       categoryId: (body.categoryId as number) ?? null,
       householdId: "hh-1",
+      barcode: (body.barcode as string | undefined) ?? null,
       createdAt: new Date(),
     };
     return HttpResponse.json(product, { status: 201 });

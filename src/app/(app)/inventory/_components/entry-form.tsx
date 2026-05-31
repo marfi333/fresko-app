@@ -24,6 +24,7 @@ export type EntryFormData = {
   expiryDate?: string;
   unit?: string;
   categoryId?: number;
+  barcode?: string;
 };
 
 type EntryFormProps = {
@@ -68,6 +69,7 @@ export const EntryForm = ({ productChoice, onSubmit, onCancel, isSubmitting }: E
       expiryDate: expiryDate || undefined,
       unit: isExisting ? undefined : unit,
       categoryId: isExisting ? undefined : categoryId,
+      barcode: !isExisting ? productChoice.barcode : undefined,
     });
   };
 

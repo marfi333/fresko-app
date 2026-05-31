@@ -5,11 +5,11 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import type { AggregatedProduct } from "./inventory-list";
 
-interface ProductRowProps {
+type ProductRowProps = {
   item: AggregatedProduct;
   showCompartments: boolean;
   onDecrease?: (item: AggregatedProduct) => void;
-}
+};
 
 const COMPARTMENT_LABELS: Record<string, string> = {
   pantry: "P",
@@ -17,7 +17,7 @@ const COMPARTMENT_LABELS: Record<string, string> = {
   freezer: "Z",
 };
 
-export function ProductRow({ item, showCompartments, onDecrease }: ProductRowProps) {
+export const ProductRow = ({ item, showCompartments, onDecrease }: ProductRowProps) => {
   const { product, totalQuantity, nearestExpiry, compartments } = item;
   const isExpired = nearestExpiry && new Date(nearestExpiry) < new Date();
 
@@ -69,4 +69,4 @@ export function ProductRow({ item, showCompartments, onDecrease }: ProductRowPro
       </Link>
     </div>
   );
-}
+};

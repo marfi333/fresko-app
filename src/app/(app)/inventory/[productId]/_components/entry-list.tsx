@@ -7,9 +7,9 @@ import { useEntries } from "@/hooks/use-entries";
 import { EditEntryDialog } from "./edit-entry-dialog";
 import { EntryActions } from "./entry-actions";
 
-interface EntryListProps {
+type EntryListProps = {
   productId: number;
-}
+};
 
 const COMPARTMENT_LABELS: Record<string, string> = {
   pantry: "Pantry",
@@ -17,7 +17,7 @@ const COMPARTMENT_LABELS: Record<string, string> = {
   freezer: "Freezer",
 };
 
-function EntryRow({ entry }: { entry: Entry }) {
+const EntryRow = ({ entry }: { entry: Entry }) => {
   const expiryDate = entry.expiryDate ? new Date(entry.expiryDate) : null;
   const isExpired = expiryDate && expiryDate < new Date();
 
@@ -44,9 +44,9 @@ function EntryRow({ entry }: { entry: Entry }) {
       <EntryActions entry={entry} />
     </div>
   );
-}
+};
 
-export function EntryList({ productId }: EntryListProps) {
+export const EntryList = ({ productId }: EntryListProps) => {
   const { data: entries, isLoading } = useEntries({ productId });
 
   if (isLoading) {
@@ -64,4 +64,4 @@ export function EntryList({ productId }: EntryListProps) {
       ))}
     </div>
   );
-}
+};

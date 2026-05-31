@@ -8,17 +8,17 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { useDecreaseQuantity } from "@/hooks/use-entry-mutations";
 import type { AggregatedProduct } from "./inventory-list";
 
-interface DecreaseSheetProps {
+type DecreaseSheetProps = {
   item: AggregatedProduct | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-}
+};
 
-export function DecreaseSheet({ item, open, onOpenChange }: DecreaseSheetProps) {
+export const DecreaseSheet = ({ item, open, onOpenChange }: DecreaseSheetProps) => {
   const [amount, setAmount] = useState("1");
   const decrease = useDecreaseQuantity();
 
-  function handleSubmit(e: React.FormEvent) {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!item) return;
     const qty = parseFloat(amount);
@@ -33,7 +33,7 @@ export function DecreaseSheet({ item, open, onOpenChange }: DecreaseSheetProps) 
         },
       }
     );
-  }
+  };
 
   if (!item) return null;
 
@@ -78,4 +78,4 @@ export function DecreaseSheet({ item, open, onOpenChange }: DecreaseSheetProps) 
       </SheetContent>
     </Sheet>
   );
-}
+};

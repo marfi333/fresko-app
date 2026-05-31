@@ -11,12 +11,12 @@ const COMPARTMENTS = [
 
 export type Compartment = "all" | "pantry" | "fridge" | "freezer";
 
-interface CompartmentTabsProps {
+type CompartmentTabsProps = {
   value: Compartment;
   onChange: (value: Compartment) => void;
-}
+};
 
-export function CompartmentTabs({ value, onChange }: CompartmentTabsProps) {
+export const CompartmentTabs = ({ value, onChange }: CompartmentTabsProps) => {
   return (
     <Tabs value={value} onValueChange={(v) => onChange(v as Compartment)} className="px-6">
       <TabsList className="w-full">
@@ -28,4 +28,4 @@ export function CompartmentTabs({ value, onChange }: CompartmentTabsProps) {
       </TabsList>
     </Tabs>
   );
-}
+};

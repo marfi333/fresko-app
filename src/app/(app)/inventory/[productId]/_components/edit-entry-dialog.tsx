@@ -24,11 +24,11 @@ import { useUpdateEntry } from "@/hooks/use-entry-mutations";
 
 const COMPARTMENTS = ["pantry", "fridge", "freezer"] as const;
 
-interface EditEntryDialogProps {
+type EditEntryDialogProps = {
   entry: Entry;
-}
+};
 
-export function EditEntryDialog({ entry }: EditEntryDialogProps) {
+export const EditEntryDialog = ({ entry }: EditEntryDialogProps) => {
   const [open, setOpen] = useState(false);
   const [quantity, setQuantity] = useState(String(entry.quantity));
   const [compartment, setCompartment] = useState(entry.compartment);
@@ -39,7 +39,7 @@ export function EditEntryDialog({ entry }: EditEntryDialogProps) {
   });
   const updateEntry = useUpdateEntry();
 
-  function handleSubmit(e: React.FormEvent) {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const qty = parseFloat(quantity);
     if (Number.isNaN(qty) || qty <= 0) return;
@@ -53,7 +53,7 @@ export function EditEntryDialog({ entry }: EditEntryDialogProps) {
       },
       { onSuccess: () => setOpen(false) }
     );
-  }
+  };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -126,4 +126,4 @@ export function EditEntryDialog({ entry }: EditEntryDialogProps) {
       </DialogContent>
     </Dialog>
   );
-}
+};

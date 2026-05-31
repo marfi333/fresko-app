@@ -11,20 +11,20 @@ import type { Compartment } from "./compartment-tabs";
 import { DecreaseSheet } from "./decrease-sheet";
 import { ProductRow } from "./product-row";
 
-interface InventoryListProps {
+type InventoryListProps = {
   compartment: Compartment;
   categoryId?: number;
-}
+};
 
-export interface AggregatedProduct {
+export type AggregatedProduct = {
   product: Product;
   totalQuantity: number;
   entries: Entry[];
   compartments: Set<Entry["compartment"]>;
   nearestExpiry: Date | null;
-}
+};
 
-function aggregateByProduct(products: Product[], entries: Entry[]): AggregatedProduct[] {
+const aggregateByProduct = (products: Product[], entries: Entry[]): AggregatedProduct[] => {
   const productMap = new Map<number, Product>();
   for (const p of products) {
     productMap.set(p.id, p);
@@ -65,9 +65,9 @@ function aggregateByProduct(products: Product[], entries: Entry[]): AggregatedPr
   }
 
   return result.sort((a, b) => a.product.name.localeCompare(b.product.name));
-}
+};
 
-export function InventoryList({ compartment, categoryId }: InventoryListProps) {
+export const InventoryList = ({ compartment, categoryId }: InventoryListProps) => {
   const [decreaseItem, setDecreaseItem] = useState<AggregatedProduct | null>(null);
   const { data: products, isLoading: productsLoading } = useProducts();
   const { data: entries, isLoading: entriesLoading } = useEntries(
@@ -119,4 +119,4 @@ export function InventoryList({ compartment, categoryId }: InventoryListProps) {
       />
     </>
   );
-}
+};

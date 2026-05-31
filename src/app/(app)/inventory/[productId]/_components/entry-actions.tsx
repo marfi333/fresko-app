@@ -17,11 +17,11 @@ import { Button } from "@/components/ui/button";
 import type { Entry } from "@/db/schema/entries";
 import { useDeleteEntry, useMarkAsWasted } from "@/hooks/use-entry-mutations";
 
-interface EntryActionsProps {
+type EntryActionsProps = {
   entry: Entry;
-}
+};
 
-export function EntryActions({ entry }: EntryActionsProps) {
+export const EntryActions = ({ entry }: EntryActionsProps) => {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const deleteEntry = useDeleteEntry();
   const markAsWasted = useMarkAsWasted();
@@ -29,15 +29,15 @@ export function EntryActions({ entry }: EntryActionsProps) {
   const expiryDate = entry.expiryDate ? new Date(entry.expiryDate) : null;
   const isExpired = expiryDate && expiryDate < new Date();
 
-  function handleDelete() {
+  const handleDelete = () => {
     deleteEntry.mutate(entry.id, {
       onSuccess: () => setDeleteOpen(false),
     });
-  }
+  };
 
-  function handleMarkAsWasted() {
+  const handleMarkAsWasted = () => {
     markAsWasted.mutate({ id: entry.id });
-  }
+  };
 
   return (
     <div className="flex items-center gap-1">
@@ -82,4 +82,4 @@ export function EntryActions({ entry }: EntryActionsProps) {
       </AlertDialog>
     </div>
   );
-}
+};

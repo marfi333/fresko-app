@@ -4,12 +4,12 @@ import { Button } from "@/components/ui/button";
 import { useCategories } from "@/hooks/use-categories";
 import { cn } from "@/lib/utils";
 
-interface CategoryFilterProps {
+type CategoryFilterProps = {
   value: number | undefined;
   onChange: (categoryId: number | undefined) => void;
-}
+};
 
-export function CategoryFilter({ value, onChange }: CategoryFilterProps) {
+export const CategoryFilter = ({ value, onChange }: CategoryFilterProps) => {
   const { data: categories } = useCategories();
 
   if (!categories || categories.length === 0) return null;
@@ -37,4 +37,4 @@ export function CategoryFilter({ value, onChange }: CategoryFilterProps) {
       ))}
     </div>
   );
-}
+};

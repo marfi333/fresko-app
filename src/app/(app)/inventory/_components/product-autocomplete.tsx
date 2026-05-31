@@ -6,26 +6,26 @@ import type { Product } from "@/db/schema/products";
 import { useProductHints } from "@/hooks/use-product-hints";
 import { useProducts } from "@/hooks/use-products";
 
-export interface ProductSelection {
+export type ProductSelection = {
   type: "existing";
   product: Product;
-}
+};
 
-export interface NewProductSelection {
+export type NewProductSelection = {
   type: "new";
   name: string;
   suggestedUnit?: string;
   suggestedCategory?: string;
-}
+};
 
 export type ProductChoice = ProductSelection | NewProductSelection;
 
-interface ProductAutocompleteProps {
+type ProductAutocompleteProps = {
   onSelect: (choice: ProductChoice) => void;
   disabled?: boolean;
-}
+};
 
-export function ProductAutocomplete({ onSelect, disabled }: ProductAutocompleteProps) {
+export const ProductAutocomplete = ({ onSelect, disabled }: ProductAutocompleteProps) => {
   const [search, setSearch] = useState("");
   const [showDropdown, setShowDropdown] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -36,13 +36,13 @@ export function ProductAutocomplete({ onSelect, disabled }: ProductAutocompleteP
   const filteredProducts = products ?? [];
   const hint = hints?.[0];
 
-  function handleSelect(product: Product) {
+  const handleSelect = (product: Product) => {
     setSearch(product.name);
     setShowDropdown(false);
     onSelect({ type: "existing", product });
-  }
+  };
 
-  function handleCreateNew() {
+  const handleCreateNew = () => {
     setShowDropdown(false);
     onSelect({
       type: "new",
@@ -50,7 +50,7 @@ export function ProductAutocomplete({ onSelect, disabled }: ProductAutocompleteP
       suggestedUnit: hint?.suggestedUnit ?? undefined,
       suggestedCategory: hint?.suggestedCategory ?? undefined,
     });
-  }
+  };
 
   return (
     <div className="relative">
@@ -99,4 +99,4 @@ export function ProductAutocomplete({ onSelect, disabled }: ProductAutocompleteP
       )}
     </div>
   );
-}
+};

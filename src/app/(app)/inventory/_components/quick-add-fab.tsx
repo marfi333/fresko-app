@@ -5,14 +5,14 @@ import { useState } from "react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { AddEntryDialog } from "./add-entry-dialog";
 
-export function QuickAddFab() {
+export const QuickAddFab = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [sheetOpen, setSheetOpen] = useState(false);
 
-  function handleManual() {
+  const handleManual = () => {
     setMenuOpen(false);
     setSheetOpen(true);
-  }
+  };
 
   return (
     <>
@@ -50,4 +50,4 @@ export function QuickAddFab() {
       <AddEntryDialog open={sheetOpen} onOpenChange={setSheetOpen} showTrigger={false} />
     </>
   );
-}
+};

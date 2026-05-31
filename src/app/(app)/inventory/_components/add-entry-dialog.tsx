@@ -9,17 +9,17 @@ import { useCreateEntry } from "@/hooks/use-entry-mutations";
 import { EntryForm, type EntryFormData } from "./entry-form";
 import { ProductAutocomplete, type ProductChoice } from "./product-autocomplete";
 
-interface AddEntryDialogProps {
+type AddEntryDialogProps = {
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
   showTrigger?: boolean;
-}
+};
 
-export function AddEntryDialog({
+export const AddEntryDialog = ({
   open: controlledOpen,
   onOpenChange,
   showTrigger = true,
-}: AddEntryDialogProps = {}) {
+}: AddEntryDialogProps = {}) => {
   const [uncontrolledOpen, setUncontrolledOpen] = useState(false);
   const isControlled = controlledOpen !== undefined;
   const open = isControlled ? controlledOpen : uncontrolledOpen;
@@ -32,16 +32,16 @@ export function AddEntryDialog({
   const createEntry = useCreateEntry();
   const queryClient = useQueryClient();
 
-  function handleReset() {
+  const handleReset = () => {
     setProductChoice(null);
-  }
+  };
 
-  function handleClose() {
+  const handleClose = () => {
     setOpen(false);
     setProductChoice(null);
-  }
+  };
 
-  async function handleSubmit(data: EntryFormData) {
+  const handleSubmit = async (data: EntryFormData) => {
     let productId: number;
 
     if (data.productChoice.type === "existing") {
@@ -76,7 +76,7 @@ export function AddEntryDialog({
         onSuccess: () => handleClose(),
       }
     );
-  }
+  };
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
@@ -107,4 +107,4 @@ export function AddEntryDialog({
       </SheetContent>
     </Sheet>
   );
-}
+};

@@ -17,23 +17,23 @@ import type { ProductChoice } from "./product-autocomplete";
 const UNITS = ["mL", "L", "g", "kg", "pieces", "packs"] as const;
 const COMPARTMENTS = ["pantry", "fridge", "freezer"] as const;
 
-export interface EntryFormData {
+export type EntryFormData = {
   productChoice: ProductChoice;
   quantity: number;
   compartment: "pantry" | "fridge" | "freezer";
   expiryDate?: string;
   unit?: string;
   categoryId?: number;
-}
+};
 
-interface EntryFormProps {
+type EntryFormProps = {
   productChoice: ProductChoice;
   onSubmit: (data: EntryFormData) => void;
   onCancel: () => void;
   isSubmitting?: boolean;
-}
+};
 
-export function EntryForm({ productChoice, onSubmit, onCancel, isSubmitting }: EntryFormProps) {
+export const EntryForm = ({ productChoice, onSubmit, onCancel, isSubmitting }: EntryFormProps) => {
   const { data: categories } = useCategories();
 
   const isExisting = productChoice.type === "existing";
@@ -56,7 +56,7 @@ export function EntryForm({ productChoice, onSubmit, onCancel, isSubmitting }: E
     return undefined;
   });
 
-  function handleSubmit(e: React.FormEvent) {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const qty = parseFloat(quantity);
     if (Number.isNaN(qty) || qty <= 0) return;
@@ -69,7 +69,7 @@ export function EntryForm({ productChoice, onSubmit, onCancel, isSubmitting }: E
       unit: isExisting ? undefined : unit,
       categoryId: isExisting ? undefined : categoryId,
     });
-  }
+  };
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
@@ -181,4 +181,4 @@ export function EntryForm({ productChoice, onSubmit, onCancel, isSubmitting }: E
       </div>
     </form>
   );
-}
+};

@@ -7,9 +7,9 @@ import { PageHeader } from "@/components/ui/page-header";
 import { useProducts } from "@/hooks/use-products";
 import { EntryList } from "./_components/entry-list";
 
-interface ProductDetailPageProps {
+type ProductDetailPageProps = {
   params: Promise<{ productId: string }>;
-}
+};
 
 export default function ProductDetailPage({ params }: ProductDetailPageProps) {
   const { productId } = use(params);

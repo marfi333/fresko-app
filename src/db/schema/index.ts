@@ -1,3 +1,4 @@
+export * from "./auth-schema";
 export * from "./products";
 export * from "./entries";
 export * from "./categories";

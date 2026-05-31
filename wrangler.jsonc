@@ -15,6 +15,7 @@
       "binding": "DB",
       "database_name": "fresko-db",
       "database_id": "54e529d4-129e-4d0f-9075-199480525d7a",
+      "migrations_dir": "drizzle",
     },
   ],
 }

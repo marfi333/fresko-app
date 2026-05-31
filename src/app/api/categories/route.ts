@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { categories } from "@/db/schema";
 import { getRequestContext } from "@/lib/api-utils";
 
-export async function GET(request: Request) {
+export const GET = async (request: Request) => {
   const ctx = await getRequestContext(request);
   if ("error" in ctx) return ctx.error;
 
@@ -14,9 +14,9 @@ export async function GET(request: Request) {
     .orderBy(categories.name);
 
   return NextResponse.json(result);
-}
+};
 
-export async function POST(request: Request) {
+export const POST = async (request: Request) => {
   const ctx = await getRequestContext(request);
   if ("error" in ctx) return ctx.error;
 
@@ -35,4 +35,4 @@ export async function POST(request: Request) {
     .returning();
 
   return NextResponse.json(category, { status: 201 });
-}
+};

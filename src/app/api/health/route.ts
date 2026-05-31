@@ -4,7 +4,7 @@ import { getDb } from "@/db";
 
 export const dynamic = "force-dynamic";
 
-export async function GET() {
+export const GET = async () => {
   try {
     const db = getDb();
     db.run(sql`select 1`);
@@ -13,4 +13,4 @@ export async function GET() {
     const message = err instanceof Error ? err.message : "unhealthy";
     return NextResponse.json({ status: "error", message }, { status: 503 });
   }
-}
+};

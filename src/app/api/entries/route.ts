@@ -5,7 +5,7 @@ import { getRequestContext } from "@/lib/api-utils";
 
 const VALID_COMPARTMENTS = ["pantry", "fridge", "freezer"] as const;
 
-export async function GET(request: Request) {
+export const GET = async (request: Request) => {
   const ctx = await getRequestContext(request);
   if ("error" in ctx) return ctx.error;
 
@@ -45,9 +45,9 @@ export async function GET(request: Request) {
     .orderBy(entries.createdAt);
 
   return NextResponse.json(result);
-}
+};
 
-export async function POST(request: Request) {
+export const POST = async (request: Request) => {
   const ctx = await getRequestContext(request);
   if ("error" in ctx) return ctx.error;
 
@@ -85,4 +85,4 @@ export async function POST(request: Request) {
     .returning();
 
   return NextResponse.json(entry, { status: 201 });
-}
+};

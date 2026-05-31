@@ -3,7 +3,7 @@ import { getDb } from "@/db";
 import { seedDefaultCategories } from "@/db/seed";
 import { createAuth } from "@/lib/auth";
 
-export async function POST(request: Request) {
+export const POST = async (request: Request) => {
   const auth = createAuth(new URL(request.url).origin);
 
   const session = await auth.api.getSession({
@@ -24,4 +24,4 @@ export async function POST(request: Request) {
   await seedDefaultCategories(db, householdId);
 
   return NextResponse.json({ success: true });
-}
+};

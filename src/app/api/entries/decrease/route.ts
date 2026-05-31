@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { entries, usageEvents } from "@/db/schema";
 import { getRequestContext } from "@/lib/api-utils";
 
-export async function POST(request: Request) {
+export const POST = async (request: Request) => {
   const ctx = await getRequestContext(request);
   if ("error" in ctx) return ctx.error;
 
@@ -59,4 +59,4 @@ export async function POST(request: Request) {
   }
 
   return NextResponse.json({ decreasedTotal: body.amount });
-}
+};

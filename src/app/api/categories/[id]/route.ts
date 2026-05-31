@@ -5,7 +5,7 @@ import { getRequestContext } from "@/lib/api-utils";
 
 type RouteParams = { params: Promise<{ id: string }> };
 
-export async function PATCH(request: Request, { params }: RouteParams) {
+export const PATCH = async (request: Request, { params }: RouteParams) => {
   const ctx = await getRequestContext(request);
   if ("error" in ctx) return ctx.error;
 
@@ -34,9 +34,9 @@ export async function PATCH(request: Request, { params }: RouteParams) {
     .returning();
 
   return NextResponse.json(updated);
-}
+};
 
-export async function DELETE(request: Request, { params }: RouteParams) {
+export const DELETE = async (request: Request, { params }: RouteParams) => {
   const ctx = await getRequestContext(request);
   if ("error" in ctx) return ctx.error;
 
@@ -55,4 +55,4 @@ export async function DELETE(request: Request, { params }: RouteParams) {
   await ctx.db.delete(categories).where(eq(categories.id, categoryId));
 
   return NextResponse.json({ success: true });
-}
+};

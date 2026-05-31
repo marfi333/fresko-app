@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { productHints } from "@/db/schema";
 import { getRequestContext } from "@/lib/api-utils";
 
-export async function GET(request: Request) {
+export const GET = async (request: Request) => {
   const ctx = await getRequestContext(request);
   if ("error" in ctx) return ctx.error;
 
@@ -21,4 +21,4 @@ export async function GET(request: Request) {
     .limit(5);
 
   return NextResponse.json(hints);
-}
+};

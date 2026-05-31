@@ -5,14 +5,14 @@ import { organization, user } from "@/db/schema/auth-schema";
 import { seedDefaultCategories } from "@/db/seed";
 import { createAuth } from "@/lib/auth";
 
-interface SignUpBody {
+type SignUpBody = {
   name?: string;
   email?: string;
   password?: string;
   householdName?: string;
-}
+};
 
-export async function POST(request: Request) {
+export const POST = async (request: Request) => {
   const baseURL = new URL(request.url).origin;
   const auth = createAuth(baseURL);
   const db = getDb();
@@ -113,9 +113,9 @@ export async function POST(request: Request) {
     const message = err instanceof Error ? err.message : "Sign up failed";
     return NextResponse.json({ error: message }, { status: 500 });
   }
-}
+};
 
-function generateUniqueSlug(name: string): string {
+const generateUniqueSlug = (name: string): string => {
   const base = name
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
@@ -125,12 +125,12 @@ function generateUniqueSlug(name: string): string {
     "abcdefghijklmnopqrstuvwxyz0123456789".charAt(Math.floor(Math.random() * 36))
   ).join("");
   return `${base || "household"}-${suffix}`;
-}
+};
 
-function rewriteCookieHeader(setCookie: string): string {
+const rewriteCookieHeader = (setCookie: string): string => {
   return setCookie
     .split(/,(?=[^;]+=)/)
     .map((c) => c.split(";")[0].trim())
     .filter(Boolean)
     .join("; ");
-}
+};

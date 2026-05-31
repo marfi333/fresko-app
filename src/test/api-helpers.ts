@@ -10,10 +10,10 @@ export const mockOrganization = {
   name: "Test Household",
 };
 
-export function setupApiMocks(options?: {
+export const setupApiMocks = (options?: {
   session?: typeof mockSession | null;
   organizationId?: string | null;
-}) {
+}) => {
   const session = options?.session === null ? null : (options?.session ?? mockSession);
   const orgId =
     options?.organizationId === null ? null : (options?.organizationId ?? mockOrganization.id);
@@ -33,4 +33,4 @@ export function setupApiMocks(options?: {
   }));
 
   return { mockAuth };
-}
+};

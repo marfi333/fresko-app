@@ -41,7 +41,6 @@ RUN apk add --no-cache libc6-compat \
 # Next.js standalone server (self-contained, ~38MB)
 COPY --from=builder --chown=node:node /app/.next/standalone ./
 COPY --from=builder --chown=node:node /app/.next/static ./.next/static
-COPY --from=builder --chown=node:node /app/public ./public
 
 # Migration toolchain (drizzle-kit + minimal transitive deps)
 COPY --from=migrate-deps --chown=node:node /migrate/node_modules /app/migrate/node_modules

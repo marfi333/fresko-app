@@ -3,30 +3,30 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type { Entry } from "@/db/schema/entries";
 
-interface CreateEntryInput {
+type CreateEntryInput = {
   productId: number;
   quantity: number;
   compartment: "pantry" | "fridge" | "freezer";
   expiryDate?: string;
-}
+};
 
-interface UpdateEntryInput {
+type UpdateEntryInput = {
   id: number;
   quantity?: number;
   compartment?: "pantry" | "fridge" | "freezer";
   expiryDate?: string | null;
-}
+};
 
-interface DecreaseQuantityInput {
+type DecreaseQuantityInput = {
   productId: number;
   amount: number;
-}
+};
 
-interface MarkAsWastedInput {
+type MarkAsWastedInput = {
   id: number;
-}
+};
 
-export function useCreateEntry() {
+export const useCreateEntry = () => {
   const queryClient = useQueryClient();
 
   return useMutation<Entry, Error, CreateEntryInput>({
@@ -47,9 +47,9 @@ export function useCreateEntry() {
       queryClient.invalidateQueries({ queryKey: ["products"] });
     },
   });
-}
+};
 
-export function useUpdateEntry() {
+export const useUpdateEntry = () => {
   const queryClient = useQueryClient();
 
   return useMutation<Entry, Error, UpdateEntryInput>({
@@ -69,9 +69,9 @@ export function useUpdateEntry() {
       queryClient.invalidateQueries({ queryKey: ["entries"] });
     },
   });
-}
+};
 
-export function useDeleteEntry() {
+export const useDeleteEntry = () => {
   const queryClient = useQueryClient();
 
   return useMutation<{ success: boolean }, Error, number>({
@@ -90,9 +90,9 @@ export function useDeleteEntry() {
       queryClient.invalidateQueries({ queryKey: ["products"] });
     },
   });
-}
+};
 
-export function useDecreaseQuantity() {
+export const useDecreaseQuantity = () => {
   const queryClient = useQueryClient();
 
   return useMutation<{ decreasedTotal: number }, Error, DecreaseQuantityInput>({
@@ -113,9 +113,9 @@ export function useDecreaseQuantity() {
       queryClient.invalidateQueries({ queryKey: ["products"] });
     },
   });
-}
+};
 
-export function useMarkAsWasted() {
+export const useMarkAsWasted = () => {
   const queryClient = useQueryClient();
 
   return useMutation<{ success: boolean }, Error, MarkAsWastedInput>({
@@ -134,4 +134,4 @@ export function useMarkAsWasted() {
       queryClient.invalidateQueries({ queryKey: ["products"] });
     },
   });
-}
+};

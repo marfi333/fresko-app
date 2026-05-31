@@ -3,7 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import type { ProductHint } from "@/db/schema/product-hints";
 
-export function useProductHints(name: string) {
+export const useProductHints = (name: string) => {
   return useQuery<ProductHint[]>({
     queryKey: ["product-hints", name],
     queryFn: async () => {
@@ -13,4 +13,4 @@ export function useProductHints(name: string) {
     },
     enabled: name.length >= 2,
   });
-}
+};

@@ -3,13 +3,13 @@
 import { useQuery } from "@tanstack/react-query";
 import type { Entry } from "@/db/schema/entries";
 
-interface UseEntriesOptions {
+type UseEntriesOptions = {
   compartment?: "pantry" | "fridge" | "freezer";
   categoryId?: number;
   productId?: number;
-}
+};
 
-export function useEntries(options?: UseEntriesOptions) {
+export const useEntries = (options?: UseEntriesOptions) => {
   const { compartment, categoryId, productId } = options ?? {};
 
   return useQuery<Entry[]>({
@@ -25,4 +25,4 @@ export function useEntries(options?: UseEntriesOptions) {
       return res.json();
     },
   });
-}
+};

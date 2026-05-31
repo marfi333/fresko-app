@@ -3,7 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import type { Category } from "@/db/schema/categories";
 
-export function useCategories() {
+export const useCategories = () => {
   return useQuery<Category[]>({
     queryKey: ["categories"],
     queryFn: async () => {
@@ -12,4 +12,4 @@ export function useCategories() {
       return res.json();
     },
   });
-}
+};

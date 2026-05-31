@@ -3,7 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import type { Product } from "@/db/schema/products";
 
-export function useProducts(search?: string) {
+export const useProducts = (search?: string) => {
   return useQuery<Product[]>({
     queryKey: ["products", search ?? ""],
     queryFn: async () => {
@@ -15,4 +15,4 @@ export function useProducts(search?: string) {
       return res.json();
     },
   });
-}
+};

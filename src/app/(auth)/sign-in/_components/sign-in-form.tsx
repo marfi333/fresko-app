@@ -40,6 +40,11 @@ export function SignInForm() {
         return;
       }
 
+      const { data: orgs } = await authClient.organization.list();
+      if (orgs && orgs.length > 0) {
+        await authClient.organization.setActive({ organizationId: orgs[0].id });
+      }
+
       router.push("/inventory");
     } catch {
       setError("An unexpected error occurred");

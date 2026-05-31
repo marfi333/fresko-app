@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { authClient } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -31,37 +30,20 @@ export function SignUpForm() {
     setLoading(true);
 
     try {
-      const { error: signUpError } = await authClient.signUp.email({
-        name,
-        email,
-        password,
-      });
-
-      if (signUpError) {
-        setError(signUpError.message ?? "Sign up failed");
-        setLoading(false);
-        return;
-      }
-
-      const { data: org, error: orgError } =
-        await authClient.organization.create({
-          name: householdName || `${name}'s Household`,
-          slug: generateSlug(householdName || `${name}'s Household`),
-        });
-
-      if (orgError) {
-        setError(orgError.message ?? "Failed to create household");
-        setLoading(false);
-        return;
-      }
-
-      await fetch("/api/households/setup", {
+      const res = await fetch("/api/sign-up", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ householdId: org.id }),
+        body: JSON.stringify({ name, email, password, householdName }),
       });
 
-      await authClient.organization.setActive({ organizationId: org.id });
+      if (!res.ok) {
+        const body = (await res.json().catch(() => ({}))) as {
+          error?: string;
+        };
+        setError(body.error ?? "Sign up failed");
+        setLoading(false);
+        return;
+      }
 
       router.push("/inventory");
     } catch {
@@ -157,11 +139,4 @@ export function SignUpForm() {
       </form>
     </Card>
   );
-}
-
-function generateSlug(name: string): string {
-  return name
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-|-$/g, "");
 }

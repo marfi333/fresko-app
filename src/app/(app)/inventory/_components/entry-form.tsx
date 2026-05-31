@@ -83,15 +83,20 @@ export function EntryForm({
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-      <div className="rounded-md bg-secondary/50 px-3 py-2">
-        <span className="text-sm font-medium">
-          {isExisting ? existingProduct!.name : productChoice.name}
+      <div className="space-y-1">
+        <span className="text-xs font-medium text-muted-foreground">
+          Product
         </span>
-        {isExisting && (
-          <span className="ml-2 text-xs text-muted-foreground">
-            {existingProduct!.unit}
+        <div className="flex items-baseline gap-2 rounded-md bg-secondary/50 px-3 py-2">
+          <span className="text-base font-medium">
+            {isExisting ? existingProduct!.name : productChoice.name}
           </span>
-        )}
+          {isExisting && (
+            <span className="text-xs text-muted-foreground">
+              {existingProduct!.unit}
+            </span>
+          )}
+        </div>
       </div>
 
       {!isExisting && (

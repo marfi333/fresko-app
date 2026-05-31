@@ -2,12 +2,12 @@
 
 import { useState } from "react";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { useCreateEntry } from "@/hooks/use-entry-mutations";
@@ -18,8 +18,25 @@ import {
 } from "./product-autocomplete";
 import { EntryForm, type EntryFormData } from "./entry-form";
 
-export function AddEntryDialog() {
-  const [open, setOpen] = useState(false);
+interface AddEntryDialogProps {
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  showTrigger?: boolean;
+}
+
+export function AddEntryDialog({
+  open: controlledOpen,
+  onOpenChange,
+  showTrigger = true,
+}: AddEntryDialogProps = {}) {
+  const [uncontrolledOpen, setUncontrolledOpen] = useState(false);
+  const isControlled = controlledOpen !== undefined;
+  const open = isControlled ? controlledOpen : uncontrolledOpen;
+  const setOpen = (next: boolean) => {
+    if (!isControlled) setUncontrolledOpen(next);
+    onOpenChange?.(next);
+  };
+
   const [productChoice, setProductChoice] = useState<ProductChoice | null>(
     null
   );
@@ -73,28 +90,35 @@ export function AddEntryDialog() {
   }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button size="sm">
-          <Plus className="mr-1 h-4 w-4" />
-          Add
-        </Button>
-      </DialogTrigger>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Add inventory entry</DialogTitle>
-        </DialogHeader>
-        {!productChoice ? (
-          <ProductAutocomplete onSelect={setProductChoice} />
-        ) : (
-          <EntryForm
-            productChoice={productChoice}
-            onSubmit={handleSubmit}
-            onCancel={handleReset}
-            isSubmitting={createEntry.isPending}
-          />
-        )}
-      </DialogContent>
-    </Dialog>
+    <Sheet open={open} onOpenChange={setOpen}>
+      {showTrigger && (
+        <SheetTrigger asChild>
+          <Button size="sm">
+            <Plus className="mr-1 h-4 w-4" />
+            Add
+          </Button>
+        </SheetTrigger>
+      )}
+      <SheetContent
+        side="bottom"
+        className="h-[85vh] max-h-[85vh] overflow-y-auto rounded-t-xl"
+      >
+        <SheetHeader>
+          <SheetTitle>Add inventory entry</SheetTitle>
+        </SheetHeader>
+        <div className="mt-4">
+          {!productChoice ? (
+            <ProductAutocomplete onSelect={setProductChoice} />
+          ) : (
+            <EntryForm
+              productChoice={productChoice}
+              onSubmit={handleSubmit}
+              onCancel={handleReset}
+              isSubmitting={createEntry.isPending}
+            />
+          )}
+        </div>
+      </SheetContent>
+    </Sheet>
   );
 }

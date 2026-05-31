@@ -1,0 +1,26 @@
+services:
+  fresko:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: fresko:latest
+    container_name: fresko
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: production
+      PORT: "3000"
+      HOSTNAME: "0.0.0.0"
+      DATABASE_PATH: /app/data/fresko.db
+    volumes:
+      - fresko-data:/app/data
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
+volumes:
+  fresko-data:

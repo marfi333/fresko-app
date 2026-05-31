@@ -1,10 +1,9 @@
-import { NextResponse } from "next/server";
 import { eq } from "drizzle-orm";
-import { getCloudflareContext } from "@opennextjs/cloudflare";
-import { createAuth } from "@/lib/auth";
-import { createDb } from "@/db";
-import { user, organization } from "@/db/schema/auth-schema";
+import { NextResponse } from "next/server";
+import { getDb } from "@/db";
+import { organization, user } from "@/db/schema/auth-schema";
 import { seedDefaultCategories } from "@/db/seed";
+import { createAuth } from "@/lib/auth";
 
 interface SignUpBody {
   name?: string;
@@ -14,10 +13,9 @@ interface SignUpBody {
 }
 
 export async function POST(request: Request) {
-  const { env } = getCloudflareContext();
   const baseURL = new URL(request.url).origin;
-  const auth = createAuth(env.DB, baseURL);
-  const db = createDb(env.DB);
+  const auth = createAuth(baseURL);
+  const db = getDb();
 
   const body = (await request.json()) as SignUpBody;
   const name = body.name?.trim();
@@ -26,16 +24,10 @@ export async function POST(request: Request) {
   const requestedHouseholdName = body.householdName?.trim();
 
   if (!name || !email || !password) {
-    return NextResponse.json(
-      { error: "Name, email, and password are required" },
-      { status: 400 }
-    );
+    return NextResponse.json({ error: "Name, email, and password are required" }, { status: 400 });
   }
   if (password.length < 8) {
-    return NextResponse.json(
-      { error: "Password must be at least 8 characters" },
-      { status: 400 }
-    );
+    return NextResponse.json({ error: "Password must be at least 8 characters" }, { status: 400 });
   }
 
   const householdName = requestedHouseholdName || `${name}'s Household`;
@@ -109,7 +101,10 @@ export async function POST(request: Request) {
     if (setCookie) response.headers.set("set-cookie", setCookie);
     return response;
   } catch (err) {
-    await db.delete(user).where(eq(user.id, userId)).catch(() => {});
+    await db
+      .delete(user)
+      .where(eq(user.id, userId))
+      .catch(() => {});
     await db
       .delete(organization)
       .where(eq(organization.slug, slug))
@@ -127,9 +122,7 @@ function generateUniqueSlug(name: string): string {
     .replace(/^-|-$/g, "")
     .slice(0, 40);
   const suffix = Array.from({ length: 6 }, () =>
-    "abcdefghijklmnopqrstuvwxyz0123456789".charAt(
-      Math.floor(Math.random() * 36)
-    )
+    "abcdefghijklmnopqrstuvwxyz0123456789".charAt(Math.floor(Math.random() * 36))
   ).join("");
   return `${base || "household"}-${suffix}`;
 }

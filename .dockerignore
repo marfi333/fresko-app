@@ -1,0 +1,40 @@
+node_modules
+.next
+.open-next
+.wrangler
+.git
+.gitignore
+.github
+
+# environment
+.env*
+
+# data (DB lives in volume)
+data
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+
+# editor / OS
+.DS_Store
+.vscode
+.idea
+
+# project metadata
+conductor
+.beads
+.serena
+.claude
+docs
+CONTEXT.md
+
+# tests
+coverage
+
+# typescript build artifacts
+*.tsbuildinfo
+
+# misc
+README.md
+*.log

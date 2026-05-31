@@ -1,9 +1,9 @@
-import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { NextResponse } from "next/server";
 
-const PUBLIC_PATHS = ["/sign-in", "/sign-up", "/api/auth"];
+const PUBLIC_PATHS = ["/sign-in", "/sign-up", "/api/auth", "/api/sign-up", "/api/health"];
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   if (PUBLIC_PATHS.some((path) => pathname.startsWith(path))) {

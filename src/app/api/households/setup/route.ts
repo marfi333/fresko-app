@@ -1,12 +1,10 @@
 import { NextResponse } from "next/server";
-import { getCloudflareContext } from "@opennextjs/cloudflare";
-import { createAuth } from "@/lib/auth";
-import { createDb } from "@/db";
+import { getDb } from "@/db";
 import { seedDefaultCategories } from "@/db/seed";
+import { createAuth } from "@/lib/auth";
 
 export async function POST(request: Request) {
-  const { env } = getCloudflareContext();
-  const auth = createAuth(env.DB, new URL(request.url).origin);
+  const auth = createAuth(new URL(request.url).origin);
 
   const session = await auth.api.getSession({
     headers: request.headers,
@@ -19,13 +17,10 @@ export async function POST(request: Request) {
   const { householdId } = (await request.json()) as { householdId: string };
 
   if (!householdId) {
-    return NextResponse.json(
-      { error: "householdId is required" },
-      { status: 400 }
-    );
+    return NextResponse.json({ error: "householdId is required" }, { status: 400 });
   }
 
-  const db = createDb(env.DB);
+  const db = getDb();
   await seedDefaultCategories(db, householdId);
 
   return NextResponse.json({ success: true });

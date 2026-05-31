@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
-import { getCloudflareContext } from "@opennextjs/cloudflare";
+import { type Database, getDb } from "@/db";
 import { createAuth } from "@/lib/auth";
-import { createDb, type Database } from "@/db";
 
 type RequestContextError = { error: NextResponse };
 type RequestContextSuccess = {
@@ -13,12 +12,9 @@ type RequestContextSuccess = {
 
 export type RequestContext = RequestContextError | RequestContextSuccess;
 
-export async function getRequestContext(
-  request: Request
-): Promise<RequestContext> {
-  const { env } = getCloudflareContext();
-  const auth = createAuth(env.DB, new URL(request.url).origin);
-  const db = createDb(env.DB);
+export async function getRequestContext(request: Request): Promise<RequestContext> {
+  const auth = createAuth(new URL(request.url).origin);
+  const db = getDb();
 
   const session = await auth.api.getSession({
     headers: request.headers,
@@ -30,15 +26,13 @@ export async function getRequestContext(
     };
   }
 
-  const householdId = (session.session as Record<string, unknown>)
-    .activeOrganizationId as string | undefined;
+  const householdId = (session.session as Record<string, unknown>).activeOrganizationId as
+    | string
+    | undefined;
 
   if (!householdId) {
     return {
-      error: NextResponse.json(
-        { error: "No active household" },
-        { status: 403 }
-      ),
+      error: NextResponse.json({ error: "No active household" }, { status: 403 }),
     };
   }
 

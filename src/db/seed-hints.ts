@@ -1,5 +1,5 @@
-import { productHints } from "./schema/product-hints";
 import type { Database } from "./index";
+import { productHints } from "./schema/product-hints";
 
 const PRODUCT_HINTS = [
   { namePattern: "milk", suggestedUnit: "L", suggestedCategory: "Dairy" },

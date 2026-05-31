@@ -1,38 +1,25 @@
-import type { D1Database } from "@cloudflare/workers-types";
 import { betterAuth } from "better-auth";
-import { withCloudflare } from "better-auth-cloudflare";
-import { organization } from "better-auth/plugins";
+import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { nextCookies } from "better-auth/next-js";
-import { drizzle } from "drizzle-orm/d1";
-import * as schema from "@/db/schema";
+import { organization } from "better-auth/plugins";
+import { getDb } from "@/db";
 
-export function createAuth(d1: D1Database, baseURL?: string) {
-  const db = drizzle(d1, { schema });
-
+export function createAuth(baseURL?: string) {
   return betterAuth({
     baseURL,
-    ...withCloudflare(
-      {
-        d1: {
-          db,
-          options: {
-            usePlural: false,
-          },
-        },
-        cf: {},
-      },
-      {
-        emailAndPassword: {
-          enabled: true,
-        },
-        plugins: [
-          organization({
-            creatorRole: "owner",
-          }),
-          nextCookies(),
-        ],
-      }
-    ),
+    database: drizzleAdapter(getDb(), {
+      provider: "sqlite",
+      usePlural: false,
+    }),
+    emailAndPassword: {
+      enabled: true,
+    },
+    plugins: [
+      organization({
+        creatorRole: "owner",
+      }),
+      nextCookies(),
+    ],
   });
 }
 

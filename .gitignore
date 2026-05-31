@@ -17,11 +17,11 @@
 /.next/
 /out/
 
-# opennext cloudflare
-/.open-next/
-
 # production
 /build
+
+# sqlite database (docker volume)
+/data
 
 # misc
 .DS_Store
@@ -43,8 +43,6 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# wrangler generated types
-cloudflare-env.d.ts
 conductor
 .beads
 .serena

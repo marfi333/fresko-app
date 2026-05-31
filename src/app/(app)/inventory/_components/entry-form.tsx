@@ -12,6 +12,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useCategories } from "@/hooks/use-categories";
+import { CategoryCombobox } from "./category-combobox";
 import type { ProductChoice } from "./product-autocomplete";
 
 const UNITS = ["mL", "L", "g", "kg", "pieces", "packs"] as const;
@@ -153,21 +154,7 @@ export const EntryForm = ({
 
           <div className="space-y-2">
             <Label htmlFor="category">Category</Label>
-            <Select
-              value={categoryId ? String(categoryId) : ""}
-              onValueChange={(v) => setCategoryId(v ? parseInt(v, 10) : undefined)}
-            >
-              <SelectTrigger id="category">
-                <SelectValue placeholder="Select category" />
-              </SelectTrigger>
-              <SelectContent>
-                {categories?.map((c) => (
-                  <SelectItem key={c.id} value={String(c.id)}>
-                    {c.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <CategoryCombobox id="category" value={categoryId} onChange={setCategoryId} />
           </div>
         </>
       )}

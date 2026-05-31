@@ -59,7 +59,7 @@ export default function ShoppingPage() {
     <div className="flex flex-col gap-4">
       <PageHeader title="Shopping" description="Your household shopping list" />
 
-      <div className="flex flex-col gap-4 px-4">
+      <div className="flex flex-col gap-4 px-4 pb-12">
         <AddItemInput
           onSubmit={async (input) => {
             await createItem.mutateAsync(input);

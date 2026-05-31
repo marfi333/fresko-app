@@ -26,10 +26,24 @@ const COMPARTMENTS = ["pantry", "fridge", "freezer"] as const;
 
 type EditEntryDialogProps = {
   entry: Entry;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  showTrigger?: boolean;
 };
 
-export const EditEntryDialog = ({ entry }: EditEntryDialogProps) => {
-  const [open, setOpen] = useState(false);
+export const EditEntryDialog = ({
+  entry,
+  open: controlledOpen,
+  onOpenChange,
+  showTrigger = true,
+}: EditEntryDialogProps) => {
+  const [uncontrolledOpen, setUncontrolledOpen] = useState(false);
+  const isControlled = controlledOpen !== undefined;
+  const open = isControlled ? controlledOpen : uncontrolledOpen;
+  const setOpen = (next: boolean) => {
+    if (!isControlled) setUncontrolledOpen(next);
+    onOpenChange?.(next);
+  };
   const [quantity, setQuantity] = useState(String(entry.quantity));
   const [compartment, setCompartment] = useState(entry.compartment);
   const [expiryDate, setExpiryDate] = useState(() => {
@@ -57,11 +71,13 @@ export const EditEntryDialog = ({ entry }: EditEntryDialogProps) => {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button variant="ghost" size="icon" className="h-7 w-7" aria-label="Edit entry">
-          <Pencil className="h-3.5 w-3.5" />
-        </Button>
-      </DialogTrigger>
+      {showTrigger && (
+        <DialogTrigger asChild>
+          <Button variant="ghost" size="icon" className="h-7 w-7" aria-label="Edit entry">
+            <Pencil className="h-3.5 w-3.5" />
+          </Button>
+        </DialogTrigger>
+      )}
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Edit entry</DialogTitle>

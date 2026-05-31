@@ -4,6 +4,7 @@ import { createQueryWrapper } from "@/test/query-wrapper";
 import {
   useCreateEntry,
   useDecreaseQuantity,
+  useDeleteAllProductEntries,
   useDeleteEntry,
   useMarkAsWasted,
   useUpdateEntry,
@@ -167,6 +168,52 @@ describe("useDecreaseQuantity", () => {
 
     await waitFor(() => expect(result.current.isError).toBe(true));
     expect(result.current.error?.message).toContain("exceeds");
+  });
+});
+
+describe("useDeleteAllProductEntries", () => {
+  beforeEach(() => vi.clearAllMocks());
+  afterEach(() => vi.restoreAllMocks());
+
+  it("DELETEs each entry id in parallel and invalidates entries+products", async () => {
+    mockFetch.mockResolvedValue({
+      ok: true,
+      json: async () => ({ success: true }),
+    });
+
+    const { wrapper, queryClient } = createQueryWrapper();
+    const invalidateSpy = vi.spyOn(queryClient, "invalidateQueries");
+
+    const { result } = renderHook(() => useDeleteAllProductEntries(), { wrapper });
+
+    await act(async () => {
+      result.current.mutate([10, 11, 12]);
+    });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+
+    expect(mockFetch).toHaveBeenCalledTimes(3);
+    expect(mockFetch).toHaveBeenCalledWith("/api/entries/10", { method: "DELETE" });
+    expect(mockFetch).toHaveBeenCalledWith("/api/entries/11", { method: "DELETE" });
+    expect(mockFetch).toHaveBeenCalledWith("/api/entries/12", { method: "DELETE" });
+    expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ["entries"] });
+    expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ["products"] });
+  });
+
+  it("rejects when any DELETE fails", async () => {
+    mockFetch
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ success: true }) })
+      .mockResolvedValueOnce({ ok: false, json: async () => ({ error: "boom" }) });
+
+    const { wrapper } = createQueryWrapper();
+    const { result } = renderHook(() => useDeleteAllProductEntries(), { wrapper });
+
+    await act(async () => {
+      result.current.mutate([1, 2]);
+    });
+
+    await waitFor(() => expect(result.current.isError).toBe(true));
+    expect(result.current.error?.message).toContain("boom");
   });
 });
 

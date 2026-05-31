@@ -1,6 +1,6 @@
 "use client";
 
-import { Minus } from "lucide-react";
+import { Minus, Plus } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import type { AggregatedProduct } from "./inventory-list";
@@ -9,6 +9,7 @@ type ProductRowProps = {
   item: AggregatedProduct;
   showCompartments: boolean;
   onDecrease?: (item: AggregatedProduct) => void;
+  onAdd?: (item: AggregatedProduct) => void;
 };
 
 const COMPARTMENT_LABELS: Record<string, string> = {
@@ -17,7 +18,7 @@ const COMPARTMENT_LABELS: Record<string, string> = {
   freezer: "Z",
 };
 
-export const ProductRow = ({ item, showCompartments, onDecrease }: ProductRowProps) => {
+export const ProductRow = ({ item, showCompartments, onDecrease, onAdd }: ProductRowProps) => {
   const { product, totalQuantity, nearestExpiry, compartments } = item;
   const isExpired = nearestExpiry && new Date(nearestExpiry) < new Date();
 
@@ -67,6 +68,17 @@ export const ProductRow = ({ item, showCompartments, onDecrease }: ProductRowPro
           </span>
         )}
       </Link>
+      {onAdd && (
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-7 w-7 shrink-0"
+          onClick={() => onAdd(item)}
+          aria-label={`Add ${product.name}`}
+        >
+          <Plus className="h-4 w-4" />
+        </Button>
+      )}
     </div>
   );
 };

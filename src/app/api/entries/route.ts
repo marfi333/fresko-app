@@ -27,10 +27,21 @@ export const GET = async (request: Request) => {
     conditions.push(eq(entries.productId, parseInt(productId, 10)));
   }
 
+  const entryProjection = {
+    id: entries.id,
+    productId: entries.productId,
+    quantity: entries.quantity,
+    compartment: entries.compartment,
+    expiryDate: entries.expiryDate,
+    createdBy: entries.createdBy,
+    householdId: entries.householdId,
+    createdAt: entries.createdAt,
+  };
+
   if (categoryId) {
     conditions.push(eq(products.categoryId, parseInt(categoryId, 10)));
     const result = await ctx.db
-      .select()
+      .select(entryProjection)
       .from(entries)
       .innerJoin(products, eq(entries.productId, products.id))
       .where(and(...conditions))
@@ -39,7 +50,7 @@ export const GET = async (request: Request) => {
   }
 
   const result = await ctx.db
-    .select()
+    .select(entryProjection)
     .from(entries)
     .where(and(...conditions))
     .orderBy(entries.createdAt);

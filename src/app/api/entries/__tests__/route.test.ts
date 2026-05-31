@@ -82,6 +82,45 @@ describe("GET /api/entries", () => {
     expect(response.status).toBe(200);
     expect(mockDb.innerJoin).toHaveBeenCalled();
   });
+
+  it("returns Entry[]-shaped rows when filtering by categoryId (regression: dairy filter)", async () => {
+    // Route MUST use explicit .select({ ... }) projection so the shape is invariant.
+    // We verify by inspecting the argument passed to .select() in the categoryId branch.
+    mockDb.orderBy.mockResolvedValue([]);
+
+    const request = new Request("http://localhost:3000/api/entries?categoryId=3");
+    const response = await GET(request);
+
+    expect(response.status).toBe(200);
+    // The categoryId branch must call .select with a projection object,
+    // not select() with no args (which returns { entries, products } join rows).
+    const selectCalls = mockDb.select.mock.calls;
+    expect(selectCalls.length).toBeGreaterThan(0);
+    const lastCall = selectCalls[selectCalls.length - 1];
+    expect(lastCall[0]).toBeDefined();
+    expect(lastCall[0]).toHaveProperty("id");
+    expect(lastCall[0]).toHaveProperty("productId");
+    expect(lastCall[0]).toHaveProperty("quantity");
+    expect(lastCall[0]).toHaveProperty("compartment");
+    expect(lastCall[0]).toHaveProperty("expiryDate");
+    expect(lastCall[0]).toHaveProperty("createdBy");
+    expect(lastCall[0]).toHaveProperty("householdId");
+    expect(lastCall[0]).toHaveProperty("createdAt");
+  });
+
+  it("filters by compartment AND categoryId together (regression: dairy on fridge tab)", async () => {
+    mockDb.orderBy.mockResolvedValue([]);
+
+    const request = new Request(
+      "http://localhost:3000/api/entries?compartment=fridge&categoryId=3"
+    );
+    const response = await GET(request);
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body).toEqual([]);
+    expect(mockDb.innerJoin).toHaveBeenCalled();
+  });
 });
 
 describe("POST /api/entries", () => {

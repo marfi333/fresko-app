@@ -115,6 +115,31 @@ export const useDecreaseQuantity = () => {
   });
 };
 
+export const useDeleteAllProductEntries = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation<{ success: true }, Error, number[]>({
+    mutationFn: async (ids) => {
+      const results = await Promise.all(
+        ids.map(async (id) => {
+          const res = await fetch(`/api/entries/${id}`, { method: "DELETE" });
+          if (!res.ok) {
+            const body = (await res.json()) as { error?: string };
+            throw new Error(body.error ?? `Failed to delete entry ${id}`);
+          }
+          return res.json();
+        })
+      );
+      void results;
+      return { success: true };
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["entries"] });
+      queryClient.invalidateQueries({ queryKey: ["products"] });
+    },
+  });
+};
+
 export const useMarkAsWasted = () => {
   const queryClient = useQueryClient();
 

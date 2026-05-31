@@ -1,12 +1,12 @@
 import type { ReactNode } from "react";
 
-interface PageHeaderProps {
+type PageHeaderProps = {
   title: string;
   description?: string;
   action?: ReactNode;
-}
+};
 
-export function PageHeader({ title, description, action }: PageHeaderProps) {
+export const PageHeader = ({ title, description, action }: PageHeaderProps) => {
   return (
     <div className="flex items-center justify-between px-6 py-4">
       <div>
@@ -16,4 +16,4 @@ export function PageHeader({ title, description, action }: PageHeaderProps) {
       {action && <div>{action}</div>}
     </div>
   );
-}
+};

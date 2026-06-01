@@ -1,7 +1,8 @@
 "use client";
 
 import { Pencil } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { CategoryCombobox } from "@/app/(app)/inventory/_components/category-combobox";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,6 +16,8 @@ import {
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import type { Entry } from "@/db/schema/entries";
 import { useUpdateEntry } from "@/hooks/use-entry-mutations";
+import { useUpdateProduct } from "@/hooks/use-product-mutations";
+import { useProducts } from "@/hooks/use-products";
 
 const COMPARTMENTS = ["pantry", "fridge", "freezer"] as const;
 
@@ -38,6 +41,10 @@ export const EditEntryDialog = ({
     if (!isControlled) setUncontrolledOpen(next);
     onOpenChange?.(next);
   };
+
+  const { data: products } = useProducts();
+  const product = products?.find((p) => p.id === entry.productId);
+
   const [quantity, setQuantity] = useState(String(entry.quantity));
   const [compartment, setCompartment] = useState(entry.compartment);
   const [expiryDate, setExpiryDate] = useState(() => {
@@ -45,12 +52,35 @@ export const EditEntryDialog = ({
     const d = entry.expiryDate instanceof Date ? entry.expiryDate : new Date(entry.expiryDate);
     return d.toISOString().split("T")[0];
   });
-  const updateEntry = useUpdateEntry();
+  const [initialCategoryId, setInitialCategoryId] = useState<number | undefined | null>(null);
+  const [categoryId, setCategoryId] = useState<number | undefined>(undefined);
+  useEffect(() => {
+    if (initialCategoryId !== null || !product) return;
+    setInitialCategoryId(product.categoryId ?? undefined);
+    setCategoryId(product.categoryId ?? undefined);
+  }, [product, initialCategoryId]);
+  const categoryHydrated = initialCategoryId !== null;
+  const categoryChanged = categoryHydrated && categoryId !== initialCategoryId;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const updateEntry = useUpdateEntry();
+  const updateProduct = useUpdateProduct();
+  const isSaving = updateEntry.isPending || updateProduct.isPending;
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const qty = parseFloat(quantity);
     if (Number.isNaN(qty) || qty <= 0) return;
+
+    if (categoryChanged) {
+      try {
+        await updateProduct.mutateAsync({
+          id: entry.productId,
+          categoryId: categoryId ?? null,
+        });
+      } catch {
+        return;
+      }
+    }
 
     updateEntry.mutate(
       {
@@ -118,18 +148,28 @@ export const EditEntryDialog = ({
             />
           </div>
 
+          <div className="space-y-2">
+            <Label htmlFor="edit-category">Category</Label>
+            <CategoryCombobox id="edit-category" value={categoryId} onChange={setCategoryId} />
+            {categoryChanged && (
+              <p className="text-xs text-muted-foreground">
+                Updates the product&rsquo;s category for all entries.
+              </p>
+            )}
+          </div>
+
           <div className="flex gap-2 pt-2">
             <Button
               type="button"
               variant="outline"
               className="flex-1"
               onClick={() => setOpen(false)}
-              disabled={updateEntry.isPending}
+              disabled={isSaving}
             >
               Cancel
             </Button>
-            <Button type="submit" className="flex-1" disabled={updateEntry.isPending}>
-              {updateEntry.isPending ? "Saving..." : "Save"}
+            <Button type="submit" className="flex-1" disabled={isSaving}>
+              {isSaving ? "Saving..." : "Save"}
             </Button>
           </div>
         </form>

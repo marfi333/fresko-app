@@ -105,6 +105,13 @@ export const handlers = [
     return HttpResponse.json(product, { status: 201 });
   }),
 
+  http.patch("/api/products/:id", async ({ request, params }) => {
+    const body = (await request.json()) as Record<string, unknown>;
+    const id = Number(params.id);
+    const existing = mockProducts.find((p) => p.id === id) ?? mockProducts[0];
+    return HttpResponse.json({ ...existing, ...body });
+  }),
+
   http.get("/api/entries", ({ request }) => {
     const url = new URL(request.url);
     const compartment = url.searchParams.get("compartment");

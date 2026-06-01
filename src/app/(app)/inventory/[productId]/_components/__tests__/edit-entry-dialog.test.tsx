@@ -76,6 +76,49 @@ describe("EditEntryDialog", () => {
     });
   });
 
+  it("updates the product's category when changed", async () => {
+    let productPatchedWith: { id: number; body: Record<string, unknown> } | null = null;
+    server.use(
+      http.patch("/api/products/:id", async ({ request, params }) => {
+        productPatchedWith = {
+          id: Number(params.id),
+          body: (await request.json()) as Record<string, unknown>,
+        };
+        return HttpResponse.json({
+          id: Number(params.id),
+          name: "Whole Milk",
+          unit: "L",
+          categoryId: 2,
+          householdId: "hh-1",
+          barcode: null,
+          createdAt: new Date("2026-05-01"),
+        });
+      }),
+      http.patch("/api/entries/:id", async () => HttpResponse.json({ ...mockEntry }))
+    );
+
+    const user = userEvent.setup();
+    const { wrapper } = createQueryWrapper();
+    render(<EditEntryDialog entry={mockEntry} />, { wrapper });
+
+    await user.click(screen.getByRole("button", { name: "Edit entry" }));
+
+    await waitFor(() => {
+      expect(screen.getByLabelText("Category")).toHaveValue("Dairy");
+    });
+
+    const categoryInput = screen.getByLabelText("Category");
+    await user.clear(categoryInput);
+    await user.type(categoryInput, "Meat");
+    await user.click(await screen.findByRole("option", { name: "Meat & Fish" }));
+
+    await user.click(screen.getByRole("button", { name: "Save" }));
+
+    await waitFor(() => {
+      expect(productPatchedWith).toEqual({ id: 1, body: { categoryId: 2 } });
+    });
+  });
+
   it("does not submit with invalid quantity", async () => {
     const patchCalled = vi.fn();
     server.use(

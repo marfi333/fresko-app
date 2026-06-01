@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { QueuePopover } from "@/components/offline/queue-popover";
 
 type PageHeaderProps = {
   title: string;
@@ -16,7 +17,10 @@ export const PageHeader = ({ title, description, action }: PageHeaderProps) => {
           {description && <p className="-mt-1.5 text-sm text-muted-foreground">{description}</p>}
         </div>
       </div>
-      {action && <div>{action}</div>}
+      <div className="flex items-center gap-2">
+        {action}
+        <QueuePopover />
+      </div>
     </div>
   );
 };

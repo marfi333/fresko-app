@@ -24,6 +24,6 @@ export function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
-    "/((?!_next/static|_next/image|api/households|.*\\.(?:ico|png|svg|webmanifest|txt|xml)$).*)",
+    "/((?!_next/static|_next/image|api/households|sw\\.js|sw\\.js\\.map|swe-worker-.*\\.js|workbox-.*\\.js|.*\\.(?:ico|png|svg|webmanifest|txt|xml)$).*)",
   ],
 };

@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
+import { ServiceWorkerRegister } from "@/components/offline/sw-register";
 import { QueryProvider } from "@/providers/query-provider";
 import "./globals.css";
 
@@ -54,6 +55,7 @@ export default function RootLayout({
         <NuqsAdapter>
           <QueryProvider>{children}</QueryProvider>
         </NuqsAdapter>
+        <ServiceWorkerRegister />
       </body>
     </html>
   );

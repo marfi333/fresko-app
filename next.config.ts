@@ -1,3 +1,4 @@
+import { withSerwist } from "@serwist/turbopack";
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
@@ -5,4 +6,4 @@ const nextConfig: NextConfig = {
   allowedDevOrigins: ["10.1.0.104"],
 };
 
-export default nextConfig;
+export default withSerwist(nextConfig);

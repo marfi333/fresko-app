@@ -20,6 +20,7 @@ const freshEntry: Entry = {
   createdBy: "user-1",
   householdId: "hh-1",
   createdAt: new Date("2026-05-20"),
+  updatedAt: new Date("2026-05-20"),
 };
 
 const expiredEntry: Entry = {
@@ -31,6 +32,7 @@ const expiredEntry: Entry = {
   createdBy: "user-1",
   householdId: "hh-1",
   createdAt: new Date("2019-12-01"),
+  updatedAt: new Date("2019-12-01"),
 };
 
 describe("EntryActions", () => {

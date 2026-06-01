@@ -44,6 +44,7 @@ export const mockEntries: Entry[] = [
     createdBy: "user-1",
     householdId: "hh-1",
     createdAt: new Date("2026-05-20"),
+    updatedAt: new Date("2026-05-20"),
   },
   {
     id: 2,
@@ -54,6 +55,7 @@ export const mockEntries: Entry[] = [
     createdBy: "user-1",
     householdId: "hh-1",
     createdAt: new Date("2026-05-21"),
+    updatedAt: new Date("2026-05-21"),
   },
   {
     id: 3,
@@ -64,13 +66,32 @@ export const mockEntries: Entry[] = [
     createdBy: "user-1",
     householdId: "hh-1",
     createdAt: new Date("2026-05-22"),
+    updatedAt: new Date("2026-05-22"),
   },
 ];
 
 export const mockCategories: Category[] = [
-  { id: 1, name: "Dairy", householdId: "hh-1", createdAt: new Date("2026-05-01") },
-  { id: 2, name: "Meat & Fish", householdId: "hh-1", createdAt: new Date("2026-05-01") },
-  { id: 3, name: "Fruits", householdId: "hh-1", createdAt: new Date("2026-05-01") },
+  {
+    id: 1,
+    name: "Dairy",
+    householdId: "hh-1",
+    createdAt: new Date("2026-05-01"),
+    updatedAt: new Date("2026-05-01"),
+  },
+  {
+    id: 2,
+    name: "Meat & Fish",
+    householdId: "hh-1",
+    createdAt: new Date("2026-05-01"),
+    updatedAt: new Date("2026-05-01"),
+  },
+  {
+    id: 3,
+    name: "Fruits",
+    householdId: "hh-1",
+    createdAt: new Date("2026-05-01"),
+    updatedAt: new Date("2026-05-01"),
+  },
 ];
 
 export const mockProductHints: ProductHint[] = [
@@ -124,6 +145,7 @@ export const handlers = [
 
   http.post("/api/entries", async ({ request }) => {
     const body = (await request.json()) as Record<string, unknown>;
+    const now = new Date();
     const entry: Entry = {
       id: mockEntries.length + 1,
       productId: body.productId as number,
@@ -132,7 +154,8 @@ export const handlers = [
       expiryDate: body.expiryDate ? new Date(body.expiryDate as string) : null,
       createdBy: "user-1",
       householdId: "hh-1",
-      createdAt: new Date(),
+      createdAt: now,
+      updatedAt: now,
     };
     return HttpResponse.json(entry, { status: 201 });
   }),
@@ -158,11 +181,13 @@ export const handlers = [
 
   http.post("/api/categories", async ({ request }) => {
     const body = (await request.json()) as { name: string };
+    const now = new Date();
     const category: Category = {
       id: mockCategories.length + 1,
       name: body.name,
       householdId: "hh-1",
-      createdAt: new Date(),
+      createdAt: now,
+      updatedAt: now,
     };
     return HttpResponse.json(category, { status: 201 });
   }),

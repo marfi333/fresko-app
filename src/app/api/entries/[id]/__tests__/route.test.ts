@@ -7,12 +7,15 @@ vi.mock("@/lib/api-utils", () => ({
   getRequestContext: (...args: unknown[]) => mockGetRequestContext(...args),
 }));
 
+const SERVER_TS = 1_700_000_000_000;
+
 const existingEntry = {
   id: 1,
   productId: 1,
   quantity: 5,
   compartment: "fridge",
   householdId: "hh-1",
+  updatedAt: new Date(SERVER_TS),
 };
 
 const mockWhere = vi.fn();
@@ -94,6 +97,64 @@ describe("PATCH /api/entries/[id]", () => {
     const response = await PATCH(request, { params: Promise.resolve({ id: "999" }) });
     expect(response.status).toBe(404);
   });
+
+  describe("LWW (clientTs)", () => {
+    it("applies the update when clientTs >= existing.updatedAt", async () => {
+      const request = new Request("http://localhost:3000/api/entries/1", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ quantity: 3, clientTs: SERVER_TS + 1_000 }),
+      });
+      const response = await PATCH(request, { params });
+      expect(response.status).toBe(200);
+      expect(mockReturning).toHaveBeenCalled();
+    });
+
+    it("returns 200 + { skipped: 'stale' } when clientTs < existing.updatedAt", async () => {
+      const request = new Request("http://localhost:3000/api/entries/1", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ quantity: 3, clientTs: SERVER_TS - 1_000 }),
+      });
+      const response = await PATCH(request, { params });
+      const body = (await response.json()) as { skipped: string; current?: unknown };
+      expect(response.status).toBe(200);
+      expect(body.skipped).toBe("stale");
+      expect(body.current).toBeDefined();
+      expect(mockReturning).not.toHaveBeenCalled();
+    });
+
+    it("returns 200 + { skipped: 'gone' } when row missing AND clientTs provided", async () => {
+      mockWhere.mockResolvedValue([]);
+      const request = new Request("http://localhost:3000/api/entries/999", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ quantity: 3, clientTs: SERVER_TS + 1_000 }),
+      });
+      const response = await PATCH(request, { params: Promise.resolve({ id: "999" }) });
+      const body = (await response.json()) as { skipped: string };
+      expect(response.status).toBe(200);
+      expect(body.skipped).toBe("gone");
+    });
+
+    it("does not leak clientTs into the entries.set payload", async () => {
+      const setSpy = vi.fn(() => ({
+        where: vi.fn(() => ({ returning: mockReturning })),
+      }));
+      mockDb.update.mockImplementationOnce(() => ({ set: setSpy }));
+
+      const request = new Request("http://localhost:3000/api/entries/1", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ quantity: 3, clientTs: SERVER_TS + 1_000 }),
+      });
+      await PATCH(request, { params });
+
+      expect(setSpy).toHaveBeenCalledWith(
+        expect.not.objectContaining({ clientTs: expect.anything() })
+      );
+    });
+  });
 });
 
 describe("DELETE /api/entries/[id]", () => {
@@ -139,5 +200,44 @@ describe("DELETE /api/entries/[id]", () => {
     });
     const response = await DELETE(request, { params: Promise.resolve({ id: "999" }) });
     expect(response.status).toBe(404);
+  });
+
+  describe("LWW (clientTs)", () => {
+    it("applies delete when clientTs >= existing.updatedAt", async () => {
+      const request = new Request("http://localhost:3000/api/entries/1", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ clientTs: SERVER_TS + 1_000 }),
+      });
+      const response = await DELETE(request, { params });
+      expect(response.status).toBe(200);
+      expect(mockDb.delete).toHaveBeenCalled();
+    });
+
+    it("returns { skipped: 'stale' } when clientTs < existing.updatedAt and does not delete", async () => {
+      const request = new Request("http://localhost:3000/api/entries/1", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ clientTs: SERVER_TS - 1_000 }),
+      });
+      const response = await DELETE(request, { params });
+      const body = (await response.json()) as { skipped: string };
+      expect(response.status).toBe(200);
+      expect(body.skipped).toBe("stale");
+      expect(mockDb.delete).not.toHaveBeenCalled();
+    });
+
+    it("returns { skipped: 'gone' } when row missing AND clientTs provided", async () => {
+      mockWhere.mockResolvedValue([]);
+      const request = new Request("http://localhost:3000/api/entries/999", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ clientTs: SERVER_TS + 1_000 }),
+      });
+      const response = await DELETE(request, { params: Promise.resolve({ id: "999" }) });
+      const body = (await response.json()) as { skipped: string };
+      expect(response.status).toBe(200);
+      expect(body.skipped).toBe("gone");
+    });
   });
 });

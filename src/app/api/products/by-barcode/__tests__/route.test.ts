@@ -66,6 +66,7 @@ describe("GET /api/products/by-barcode", () => {
       householdId: "hh-1",
       barcode: "5901234123457",
       createdAt: new Date("2026-05-01"),
+      updatedAt: new Date("2026-05-01"),
     };
     mockDb.where.mockResolvedValue([product]);
 

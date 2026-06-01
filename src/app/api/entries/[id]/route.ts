@@ -2,6 +2,7 @@ import { and, eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { entries, usageEvents } from "@/db/schema";
 import { getRequestContext } from "@/lib/api-utils";
+import { decideLWW, extractClientTs } from "@/lib/sync/lww";
 
 const VALID_COMPARTMENTS = ["pantry", "fridge", "freezer"] as const;
 
@@ -19,11 +20,21 @@ export const PATCH = async (request: Request, { params }: RouteParams) => {
     .from(entries)
     .where(and(eq(entries.id, entryId), eq(entries.householdId, ctx.householdId)));
 
+  const rawBody = (await request.json()) as Record<string, unknown>;
+  const { clientTs, rest } = extractClientTs(rawBody);
+
   if (!existing) {
+    if (clientTs !== undefined) {
+      return NextResponse.json({ skipped: "gone" });
+    }
     return NextResponse.json({ error: "Entry not found" }, { status: 404 });
   }
 
-  const body = (await request.json()) as {
+  if (decideLWW(clientTs, existing.updatedAt) === "stale") {
+    return NextResponse.json({ skipped: "stale", current: existing });
+  }
+
+  const body = rest as {
     quantity?: number;
     compartment?: string;
     expiryDate?: string | null;
@@ -73,8 +84,24 @@ export const DELETE = async (request: Request, { params }: RouteParams) => {
     .from(entries)
     .where(and(eq(entries.id, entryId), eq(entries.householdId, ctx.householdId)));
 
+  // DELETE bodies are optional. Try to read clientTs; fall through if absent.
+  let clientTs: number | undefined;
+  try {
+    const rawBody = (await request.json()) as Record<string, unknown>;
+    ({ clientTs } = extractClientTs(rawBody));
+  } catch {
+    clientTs = undefined;
+  }
+
   if (!existing) {
+    if (clientTs !== undefined) {
+      return NextResponse.json({ skipped: "gone" });
+    }
     return NextResponse.json({ error: "Entry not found" }, { status: 404 });
+  }
+
+  if (decideLWW(clientTs, existing.updatedAt) === "stale") {
+    return NextResponse.json({ skipped: "stale", current: existing });
   }
 
   await ctx.db.insert(usageEvents).values({

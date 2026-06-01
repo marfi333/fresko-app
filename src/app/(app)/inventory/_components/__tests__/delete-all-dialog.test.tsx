@@ -29,6 +29,7 @@ const makeEntry = (id: number, quantity: number): Entry => ({
   createdBy: "user-1",
   householdId: "hh-1",
   createdAt: new Date(),
+  updatedAt: new Date(),
 });
 
 const makeItem = (entries: Entry[]): AggregatedProduct => ({

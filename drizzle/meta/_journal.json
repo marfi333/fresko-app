@@ -36,6 +36,13 @@
       "when": 1780262229581,
       "tag": "0004_lush_the_twelve",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1780275517321,
+      "tag": "0005_strong_photon",
+      "breakpoints": true
     }
   ]
 }

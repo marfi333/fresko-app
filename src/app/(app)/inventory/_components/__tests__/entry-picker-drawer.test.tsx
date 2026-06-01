@@ -25,6 +25,7 @@ const makeEntry = (id: number, overrides: Partial<Entry> = {}): Entry => ({
   createdBy: "user-1",
   householdId: "hh-1",
   createdAt: new Date(),
+  updatedAt: new Date(),
   ...overrides,
 });
 

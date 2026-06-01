@@ -1,6 +1,8 @@
 import { integer, real, sqliteTable, text } from "drizzle-orm/sqlite-core";
 import { products } from "./products";
 
+// NOTE: `updatedAt` uses `timestamp_ms` (ms) for LWW vs the client's Date.now();
+// `createdAt`/`purchasedAt` stay in seconds for backwards compatibility.
 export const shoppingItems = sqliteTable("shopping_items", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   householdId: text("household_id").notNull(),
@@ -16,6 +18,10 @@ export const shoppingItems = sqliteTable("shopping_items", {
     .notNull()
     .$defaultFn(() => new Date()),
   purchasedAt: integer("purchased_at", { mode: "timestamp" }),
+  updatedAt: integer("updated_at", { mode: "timestamp_ms" })
+    .notNull()
+    .$defaultFn(() => new Date())
+    .$onUpdate(() => new Date()),
 });
 
 export type ShoppingItem = typeof shoppingItems.$inferSelect;

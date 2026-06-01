@@ -25,6 +25,7 @@ const mockDb = {
       purchased: false,
       createdBy: "user-1",
       createdAt: new Date("2026-05-31T00:00:00Z"),
+      updatedAt: new Date("2026-05-31T00:00:00Z"),
       purchasedAt: null,
     },
   ]),

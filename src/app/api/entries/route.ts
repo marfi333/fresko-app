@@ -36,6 +36,7 @@ export const GET = async (request: Request) => {
     createdBy: entries.createdBy,
     householdId: entries.householdId,
     createdAt: entries.createdAt,
+    updatedAt: entries.updatedAt,
   };
 
   if (categoryId) {

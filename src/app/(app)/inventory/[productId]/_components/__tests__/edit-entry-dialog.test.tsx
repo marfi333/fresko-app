@@ -20,6 +20,7 @@ const mockEntry: Entry = {
   createdBy: "user-1",
   householdId: "hh-1",
   createdAt: new Date("2026-05-20"),
+  updatedAt: new Date("2026-05-20"),
 };
 
 describe("EditEntryDialog", () => {
@@ -92,6 +93,7 @@ describe("EditEntryDialog", () => {
           householdId: "hh-1",
           barcode: null,
           createdAt: new Date("2026-05-01"),
+          updatedAt: new Date("2026-05-01"),
         });
       }),
       http.patch("/api/entries/:id", async () => HttpResponse.json({ ...mockEntry }))

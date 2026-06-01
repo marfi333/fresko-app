@@ -20,20 +20,14 @@ const mockDb = {
 const SERVER_TS = Date.UTC(2026, 4, 31);
 
 const baseRow = {
-  id: 5,
+  id: 7,
+  name: "Dairy",
   householdId: "hh-1",
-  productId: 10,
-  name: "Yogurt",
-  quantity: 1,
-  unit: "packs",
-  purchased: false,
-  createdBy: "user-1",
-  createdAt: new Date("2026-05-31T00:00:00Z"),
+  createdAt: new Date("2026-05-01"),
   updatedAt: new Date(SERVER_TS),
-  purchasedAt: null,
 };
 
-import { DELETE, PATCH } from "../[id]/route";
+import { DELETE, PATCH } from "../route";
 
 const setAuth = () => {
   mockGetRequestContext.mockResolvedValue({
@@ -46,106 +40,94 @@ const setAuth = () => {
 
 const params = (id: string) => ({ params: Promise.resolve({ id }) });
 
-describe("PATCH /api/shopping/[id]", () => {
+describe("PATCH /api/categories/[id]", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     setAuth();
     mockDb.where.mockImplementation(() => mockDb);
   });
 
-  it("returns 404 when item not found in household", async () => {
-    mockDb.where.mockResolvedValueOnce([]); // existing select
+  it("returns 401 when unauthenticated", async () => {
+    mockGetRequestContext.mockResolvedValue({
+      error: NextResponse.json({ error: "Unauthorized" }, { status: 401 }),
+    });
     const response = await PATCH(
-      new Request("http://localhost:3000/api/shopping/5", {
+      new Request("http://localhost:3000/api/categories/7", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ purchased: true }),
+        body: JSON.stringify({ name: "Dairy & Eggs" }),
       }),
-      params("5")
+      params("7")
+    );
+    expect(response.status).toBe(401);
+  });
+
+  it("returns 404 when category not found", async () => {
+    mockDb.where.mockResolvedValueOnce([]);
+    const response = await PATCH(
+      new Request("http://localhost:3000/api/categories/7", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: "Dairy & Eggs" }),
+      }),
+      params("7")
     );
     expect(response.status).toBe(404);
   });
 
-  it("toggling purchased true sets purchasedAt", async () => {
+  it("returns 400 when name missing", async () => {
     mockDb.where.mockResolvedValueOnce([baseRow]);
-    mockDb.returning.mockResolvedValueOnce([
-      { ...baseRow, purchased: true, purchasedAt: new Date() },
-    ]);
     const response = await PATCH(
-      new Request("http://localhost:3000/api/shopping/5", {
+      new Request("http://localhost:3000/api/categories/7", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ purchased: true }),
+        body: JSON.stringify({}),
       }),
-      params("5")
+      params("7")
     );
-    expect(response.status).toBe(200);
-    expect(mockDb.set).toHaveBeenCalledWith(
-      expect.objectContaining({ purchased: true, purchasedAt: expect.any(Date) })
-    );
+    expect(response.status).toBe(400);
   });
 
-  it("toggling purchased false clears purchasedAt", async () => {
-    mockDb.where.mockResolvedValueOnce([{ ...baseRow, purchased: true, purchasedAt: new Date() }]);
-    mockDb.returning.mockResolvedValueOnce([{ ...baseRow, purchased: false, purchasedAt: null }]);
-    const response = await PATCH(
-      new Request("http://localhost:3000/api/shopping/5", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ purchased: false }),
-      }),
-      params("5")
-    );
-    expect(response.status).toBe(200);
-    expect(mockDb.set).toHaveBeenCalledWith(
-      expect.objectContaining({ purchased: false, purchasedAt: null })
-    );
-  });
-
-  it("can edit name/quantity/unit", async () => {
+  it("renames category", async () => {
     mockDb.where.mockResolvedValueOnce([baseRow]);
-    mockDb.returning.mockResolvedValueOnce([
-      { ...baseRow, name: "Greek Yogurt", quantity: 2, unit: "kg" },
-    ]);
+    mockDb.returning.mockResolvedValueOnce([{ ...baseRow, name: "Dairy & Eggs" }]);
     const response = await PATCH(
-      new Request("http://localhost:3000/api/shopping/5", {
+      new Request("http://localhost:3000/api/categories/7", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: "Greek Yogurt", quantity: 2, unit: "kg" }),
+        body: JSON.stringify({ name: "Dairy & Eggs" }),
       }),
-      params("5")
+      params("7")
     );
     expect(response.status).toBe(200);
-    expect(mockDb.set).toHaveBeenCalledWith(
-      expect.objectContaining({ name: "Greek Yogurt", quantity: 2, unit: "kg" })
-    );
+    expect(mockDb.set).toHaveBeenCalledWith({ name: "Dairy & Eggs" });
   });
 
   describe("LWW (clientTs)", () => {
     it("applies update when clientTs >= existing.updatedAt", async () => {
       mockDb.where.mockResolvedValueOnce([baseRow]);
-      mockDb.returning.mockResolvedValueOnce([{ ...baseRow, name: "Skyr" }]);
+      mockDb.returning.mockResolvedValueOnce([{ ...baseRow, name: "Dairy & Eggs" }]);
       const response = await PATCH(
-        new Request("http://localhost:3000/api/shopping/5", {
+        new Request("http://localhost:3000/api/categories/7", {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ name: "Skyr", clientTs: SERVER_TS + 1_000 }),
+          body: JSON.stringify({ name: "Dairy & Eggs", clientTs: SERVER_TS + 1_000 }),
         }),
-        params("5")
+        params("7")
       );
       expect(response.status).toBe(200);
-      expect(mockDb.set).toHaveBeenCalledWith(expect.objectContaining({ name: "Skyr" }));
+      expect(mockDb.set).toHaveBeenCalledWith({ name: "Dairy & Eggs" });
     });
 
     it("returns { skipped: 'stale' } when clientTs < existing.updatedAt", async () => {
       mockDb.where.mockResolvedValueOnce([baseRow]);
       const response = await PATCH(
-        new Request("http://localhost:3000/api/shopping/5", {
+        new Request("http://localhost:3000/api/categories/7", {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ name: "Skyr", clientTs: SERVER_TS - 1_000 }),
+          body: JSON.stringify({ name: "Dairy & Eggs", clientTs: SERVER_TS - 1_000 }),
         }),
-        params("5")
+        params("7")
       );
       const body = (await response.json()) as { skipped: string };
       expect(response.status).toBe(200);
@@ -156,12 +138,12 @@ describe("PATCH /api/shopping/[id]", () => {
     it("returns { skipped: 'gone' } when row missing AND clientTs provided", async () => {
       mockDb.where.mockResolvedValueOnce([]);
       const response = await PATCH(
-        new Request("http://localhost:3000/api/shopping/5", {
+        new Request("http://localhost:3000/api/categories/7", {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ name: "Skyr", clientTs: SERVER_TS + 1_000 }),
+          body: JSON.stringify({ name: "Dairy & Eggs", clientTs: SERVER_TS + 1_000 }),
         }),
-        params("5")
+        params("7")
       );
       const body = (await response.json()) as { skipped: string };
       expect(response.status).toBe(200);
@@ -170,54 +152,53 @@ describe("PATCH /api/shopping/[id]", () => {
   });
 });
 
-describe("DELETE /api/shopping/[id]", () => {
+describe("DELETE /api/categories/[id]", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     setAuth();
     mockDb.where.mockImplementation(() => mockDb);
   });
 
+  it("returns 401 when unauthenticated", async () => {
+    mockGetRequestContext.mockResolvedValue({
+      error: NextResponse.json({ error: "Unauthorized" }, { status: 401 }),
+    });
+    const response = await DELETE(
+      new Request("http://localhost:3000/api/categories/7", { method: "DELETE" }),
+      params("7")
+    );
+    expect(response.status).toBe(401);
+  });
+
   it("returns 404 when not found", async () => {
     mockDb.where.mockResolvedValueOnce([]);
     const response = await DELETE(
-      new Request("http://localhost:3000/api/shopping/5", { method: "DELETE" }),
-      params("5")
+      new Request("http://localhost:3000/api/categories/7", { method: "DELETE" }),
+      params("7")
     );
     expect(response.status).toBe(404);
   });
 
   it("deletes when found", async () => {
     mockDb.where.mockResolvedValueOnce([baseRow]);
-    mockDb.where.mockReturnValueOnce(Promise.resolve(undefined));
     const response = await DELETE(
-      new Request("http://localhost:3000/api/shopping/5", { method: "DELETE" }),
-      params("5")
+      new Request("http://localhost:3000/api/categories/7", { method: "DELETE" }),
+      params("7")
     );
     expect(response.status).toBe(200);
     expect(mockDb.delete).toHaveBeenCalled();
   });
 
-  it("returns 401 when not authenticated", async () => {
-    mockGetRequestContext.mockResolvedValue({
-      error: NextResponse.json({ error: "Unauthorized" }, { status: 401 }),
-    });
-    const response = await DELETE(
-      new Request("http://localhost:3000/api/shopping/5", { method: "DELETE" }),
-      params("5")
-    );
-    expect(response.status).toBe(401);
-  });
-
   describe("LWW (clientTs)", () => {
-    it("returns { skipped: 'stale' } when clientTs < existing.updatedAt and skips delete", async () => {
+    it("returns { skipped: 'stale' } and skips delete when clientTs < existing.updatedAt", async () => {
       mockDb.where.mockResolvedValueOnce([baseRow]);
       const response = await DELETE(
-        new Request("http://localhost:3000/api/shopping/5", {
+        new Request("http://localhost:3000/api/categories/7", {
           method: "DELETE",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ clientTs: SERVER_TS - 1_000 }),
         }),
-        params("5")
+        params("7")
       );
       const body = (await response.json()) as { skipped: string };
       expect(response.status).toBe(200);
@@ -228,12 +209,12 @@ describe("DELETE /api/shopping/[id]", () => {
     it("returns { skipped: 'gone' } when row missing AND clientTs provided", async () => {
       mockDb.where.mockResolvedValueOnce([]);
       const response = await DELETE(
-        new Request("http://localhost:3000/api/shopping/5", {
+        new Request("http://localhost:3000/api/categories/7", {
           method: "DELETE",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ clientTs: SERVER_TS + 1_000 }),
         }),
-        params("5")
+        params("7")
       );
       const body = (await response.json()) as { skipped: string };
       expect(response.status).toBe(200);

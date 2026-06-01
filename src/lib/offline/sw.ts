@@ -8,6 +8,7 @@ import {
   type SerwistGlobalConfig,
   StaleWhileRevalidate,
 } from "serwist";
+import { SYNC_MESSAGE, SYNC_TAG } from "./sync-tag";
 
 declare global {
   interface WorkerGlobalScope extends SerwistGlobalConfig {
@@ -15,7 +16,14 @@ declare global {
   }
 }
 
-declare const self: ServiceWorkerGlobalScope;
+type SyncEvent = ExtendableEvent & {
+  tag: string;
+  lastChance: boolean;
+};
+
+declare const self: ServiceWorkerGlobalScope & {
+  addEventListener(type: "sync", listener: (event: SyncEvent) => void): void;
+};
 
 const apiGet = new StaleWhileRevalidate({
   cacheName: "fresko-api-get",
@@ -53,3 +61,18 @@ const serwist = new Serwist({
 });
 
 serwist.addEventListeners();
+
+// Background Sync: when the browser fires our sync tag, broadcast a message to
+// all clients. Whichever client is open runs the sync runner against its own
+// IndexedDB (we deliberately don't duplicate the IDB write logic in the SW).
+self.addEventListener("sync", (event) => {
+  if (event.tag !== SYNC_TAG) return;
+  event.waitUntil(
+    (async () => {
+      const clients = await self.clients.matchAll({ includeUncontrolled: true, type: "window" });
+      for (const client of clients) {
+        client.postMessage({ type: SYNC_MESSAGE });
+      }
+    })()
+  );
+});

@@ -14,6 +14,8 @@ export type OutboxRecord = {
   id: string;
   entity: MirrorEntity;
   op: OutboxOp;
+  serverId?: number;
+  mirrorId?: string;
   payload: Record<string, unknown>;
   clientTs: number;
   status: OutboxStatus;

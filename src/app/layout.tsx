@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
+import { ConnectivityToast } from "@/components/offline/connectivity-toast";
 import { ServiceWorkerRegister } from "@/components/offline/sw-register";
 import { QueryProvider } from "@/providers/query-provider";
 import "./globals.css";
@@ -53,7 +54,10 @@ export default function RootLayout({
     <html lang="en" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col">
         <NuqsAdapter>
-          <QueryProvider>{children}</QueryProvider>
+          <QueryProvider>
+            {children}
+            <ConnectivityToast />
+          </QueryProvider>
         </NuqsAdapter>
         <ServiceWorkerRegister />
       </body>

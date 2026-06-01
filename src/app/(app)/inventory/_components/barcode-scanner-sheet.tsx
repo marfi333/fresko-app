@@ -3,11 +3,13 @@
 import { Check } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { WebHaptics } from "web-haptics";
+import { BarcodeOfflineState } from "@/components/barcode/barcode-offline-state";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { useBarcodeScanner } from "@/hooks/use-barcode-scanner";
+import { useOnline } from "@/hooks/use-online";
 
 const BARCODE_PATTERN = /^(\d{8}|\d{12}|\d{13})$/;
 const SUCCESS_DELAY_MS = 600;
@@ -109,6 +111,14 @@ export const BarcodeScannerSheet = ({ open, onOpenChange, onResult }: BarcodeSca
   const isSubmitting = scannedCode !== null;
 
   const cameraBlocked = error === "permission-denied" || error === "unavailable";
+  const { online } = useOnline();
+  const [retryNonce, setRetryNonce] = useState(0);
+
+  // When offline AND the sheet is open, stop the camera so it doesn't keep
+  // streaming; the barcode lookup endpoint can't be reached anyway.
+  useEffect(() => {
+    if (open && !online) stop();
+  }, [open, online, stop]);
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -117,86 +127,96 @@ export const BarcodeScannerSheet = ({ open, onOpenChange, onResult }: BarcodeSca
           <SheetTitle>Scan a barcode</SheetTitle>
         </SheetHeader>
 
-        <div className="mt-4 flex flex-col gap-4">
-          {!cameraBlocked && !scannedCode && (
-            <div className="relative aspect-2/1 w-full overflow-hidden rounded-md bg-black">
-              {/* biome-ignore lint/a11y/useMediaCaption: live camera preview, no captions available */}
-              <video
-                ref={videoCallbackRef}
-                className="h-full w-full object-cover"
-                aria-label="Camera preview"
-                autoPlay
-                playsInline
-                muted
-              />
-              {!isScanning && (
-                <div className="absolute inset-0 flex items-center justify-center text-sm text-white/80">
-                  Starting camera…
-                </div>
-              )}
-            </div>
-          )}
-
-          {scannedCode && (
-            <div
-              className="flex items-center gap-3 rounded-md border border-emerald-500/30 bg-emerald-500/10 px-4 py-3"
-              role="status"
-              aria-live="polite"
-            >
-              <Check className="h-5 w-5 text-emerald-600" aria-hidden="true" />
-              <div className="flex flex-col">
-                <span className="text-sm font-medium">Got it!</span>
-                <span className="font-mono text-xs text-muted-foreground">{scannedCode}</span>
-              </div>
-            </div>
-          )}
-
-          {cameraBlocked && (
-            <div
-              role="alert"
-              className="rounded-md border border-destructive/30 bg-destructive/5 p-3 text-sm"
-            >
-              {error === "permission-denied"
-                ? "Camera access was blocked. Enter the barcode manually below."
-                : "Camera not available on this device. Enter the barcode manually below."}
-            </div>
-          )}
-
-          <form onSubmit={handleManualSubmit} className="flex flex-col gap-2">
-            <Label htmlFor="manual-barcode">Barcode</Label>
-            <Input
-              id="manual-barcode"
-              inputMode="numeric"
-              autoComplete="off"
-              value={manualCode}
-              onChange={(e) => {
-                setManualCode(e.target.value);
-                if (manualError) setManualError(null);
-              }}
-              placeholder="8, 12, or 13 digits"
-              disabled={isSubmitting}
+        {!online ? (
+          <div className="mt-4">
+            <BarcodeOfflineState
+              key={retryNonce}
+              onRetry={() => setRetryNonce((n) => n + 1)}
+              onCancel={() => onOpenChange(false)}
             />
-            {manualError && (
-              <p className="text-xs text-destructive" role="alert">
-                {manualError}
-              </p>
+          </div>
+        ) : (
+          <div className="mt-4 flex flex-col gap-4">
+            {!cameraBlocked && !scannedCode && (
+              <div className="relative aspect-2/1 w-full overflow-hidden rounded-md bg-black">
+                {/* biome-ignore lint/a11y/useMediaCaption: live camera preview, no captions available */}
+                <video
+                  ref={videoCallbackRef}
+                  className="h-full w-full object-cover"
+                  aria-label="Camera preview"
+                  autoPlay
+                  playsInline
+                  muted
+                />
+                {!isScanning && (
+                  <div className="absolute inset-0 flex items-center justify-center text-sm text-white/80">
+                    Starting camera…
+                  </div>
+                )}
+              </div>
             )}
-            <div className="flex gap-2 pt-2">
-              <Button
-                type="button"
-                variant="outline"
-                className="flex-1"
-                onClick={() => onOpenChange(false)}
-                disabled={isSubmitting}
+
+            {scannedCode && (
+              <div
+                className="flex items-center gap-3 rounded-md border border-emerald-500/30 bg-emerald-500/10 px-4 py-3"
+                role="status"
+                aria-live="polite"
               >
-                Cancel
-              </Button>
-              <Button type="submit" className="flex-1" disabled={isSubmitting}>
-                Use barcode
-              </Button>
-            </div>
-          </form>
-        </div>
+                <Check className="h-5 w-5 text-emerald-600" aria-hidden="true" />
+                <div className="flex flex-col">
+                  <span className="text-sm font-medium">Got it!</span>
+                  <span className="font-mono text-xs text-muted-foreground">{scannedCode}</span>
+                </div>
+              </div>
+            )}
+
+            {cameraBlocked && (
+              <div
+                role="alert"
+                className="rounded-md border border-destructive/30 bg-destructive/5 p-3 text-sm"
+              >
+                {error === "permission-denied"
+                  ? "Camera access was blocked. Enter the barcode manually below."
+                  : "Camera not available on this device. Enter the barcode manually below."}
+              </div>
+            )}
+
+            <form onSubmit={handleManualSubmit} className="flex flex-col gap-2">
+              <Label htmlFor="manual-barcode">Barcode</Label>
+              <Input
+                id="manual-barcode"
+                inputMode="numeric"
+                autoComplete="off"
+                value={manualCode}
+                onChange={(e) => {
+                  setManualCode(e.target.value);
+                  if (manualError) setManualError(null);
+                }}
+                placeholder="8, 12, or 13 digits"
+                disabled={isSubmitting}
+              />
+              {manualError && (
+                <p className="text-xs text-destructive" role="alert">
+                  {manualError}
+                </p>
+              )}
+              <div className="flex gap-2 pt-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="flex-1"
+                  onClick={() => onOpenChange(false)}
+                  disabled={isSubmitting}
+                >
+                  Cancel
+                </Button>
+                <Button type="submit" className="flex-1" disabled={isSubmitting}>
+                  Use barcode
+                </Button>
+              </div>
+            </form>
+          </div>
+        )}
       </SheetContent>
     </Sheet>
   );

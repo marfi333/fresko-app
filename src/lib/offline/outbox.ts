@@ -1,6 +1,6 @@
 import { ulid } from "ulid";
 
-import { getMirrorDb } from "./db";
+import { getMirrorDb, notifyOutbox } from "./db";
 import type { MirrorEntity, MirrorRow, OutboxOp, OutboxRecord } from "./types";
 
 export type EnqueueInput = {
@@ -53,6 +53,7 @@ export const enqueueMutation = async (
   }
 
   await tx.done;
+  notifyOutbox();
 
   options.onEnqueued?.(record);
   return record;

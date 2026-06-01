@@ -103,6 +103,20 @@ export const mirror = {
 
 type EnqueueInput = Pick<OutboxRecord, "id" | "entity" | "op" | "payload" | "clientTs">;
 
+type OutboxListener = () => void;
+const outboxListeners = new Set<OutboxListener>();
+
+const notifyOutboxChange = () => {
+  for (const l of outboxListeners) l();
+};
+
+export const subscribeOutbox = (listener: OutboxListener): (() => void) => {
+  outboxListeners.add(listener);
+  return () => {
+    outboxListeners.delete(listener);
+  };
+};
+
 export const outbox = {
   enqueue: async (record: EnqueueInput): Promise<void> => {
     const db = await getMirrorDb();
@@ -113,6 +127,7 @@ export const outbox = {
       status: "pending",
       attempts: 0,
     });
+    notifyOutboxChange();
   },
   peekAll: async (): Promise<OutboxRecord[]> => {
     const db = await getMirrorDb();
@@ -121,6 +136,7 @@ export const outbox = {
   ack: async (id: string): Promise<void> => {
     const db = await getMirrorDb();
     await db.delete("outbox", id);
+    notifyOutboxChange();
   },
   markFailed: async (id: string, error: string): Promise<void> => {
     const db = await getMirrorDb();
@@ -132,5 +148,13 @@ export const outbox = {
       attempts: row.attempts + 1,
       lastError: error,
     });
+    notifyOutboxChange();
   },
 };
+
+/**
+ * Internal-use notify for `enqueueMutation` (which writes the outbox via the
+ * raw `tx` to keep the multi-store transaction atomic, bypassing the
+ * `outbox.enqueue` notify path). Exported so `outbox.ts` can call it.
+ */
+export const notifyOutbox = notifyOutboxChange;

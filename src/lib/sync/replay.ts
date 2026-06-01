@@ -1,9 +1,9 @@
 import { and, asc, eq } from "drizzle-orm";
 
-import { categories, entries, shoppingItems, usageEvents } from "@/db/schema";
+import { categories, entries, products, shoppingItems, usageEvents } from "@/db/schema";
 import { decideLWW } from "./lww";
 
-export type ReplayEntity = "entries" | "categories" | "shoppingItems";
+export type ReplayEntity = "entries" | "categories" | "shoppingItems" | "products";
 export type ReplayOp = "create" | "update" | "delete" | "decrease";
 
 export type ReplayItem = {
@@ -13,6 +13,11 @@ export type ReplayItem = {
   serverId?: number;
   payload: Record<string, unknown>;
   clientTs: number;
+  // Optional: client-generated negative id used as a placeholder. When present
+  // and a sibling item references it (e.g. entries:create whose payload.productId
+  // is this number), the server resolves it to the real id assigned during this
+  // batch replay.
+  tempId?: number;
 };
 
 export type ReplayStatus = "ok" | "skipped" | "gone" | "error";
@@ -22,6 +27,9 @@ export type ReplayResult = {
   status: ReplayStatus;
   reason?: string;
   row?: unknown;
+  // When a create assigned a real id, expose it here so client-side code can
+  // resolve subsequent refs.
+  serverId?: number;
 };
 
 // `db` is intentionally loose here: the real type is the Drizzle DB returned
@@ -45,18 +53,42 @@ const tableFor = (entity: ReplayEntity) => {
       return categories;
     case "shoppingItems":
       return shoppingItems;
+    case "products":
+      return products;
   }
 };
 
-const replayCreate = async (ctx: ReplayCtx, item: ReplayItem): Promise<ReplayResult> => {
-  const { entity, payload, id } = item;
+// Resolves negative client-generated temp ids to the real server ids that this
+// batch's prior creates assigned. Returns the original id unchanged for
+// non-temp values.
+const resolveTempId = (
+  raw: number | null | undefined,
+  tempIdMap: Map<number, number>
+): number | null | undefined => {
+  if (raw === null || raw === undefined) return raw;
+  if (raw >= 0) return raw;
+  const real = tempIdMap.get(raw);
+  return real ?? raw;
+};
+
+const replayCreate = async (
+  ctx: ReplayCtx,
+  item: ReplayItem,
+  tempIdMap: Map<number, number>
+): Promise<ReplayResult> => {
+  const { entity, payload, id, tempId } = item;
 
   if (entity === "entries") {
-    const productId = payload.productId as number | undefined;
+    const rawProductId = payload.productId as number | undefined;
+    const productId = resolveTempId(rawProductId, tempIdMap);
     const quantity = payload.quantity as number | undefined;
     const compartment = payload.compartment as string | undefined;
-    if (!productId || !quantity || !compartment) {
-      return { id, status: "error", reason: "missing required fields" };
+    if (!productId || productId < 0 || !quantity || !compartment) {
+      return {
+        id,
+        status: "error",
+        reason: "missing required fields or unresolved temp productId",
+      };
     }
     if (!VALID_COMPARTMENTS.includes(compartment as (typeof VALID_COMPARTMENTS)[number])) {
       return { id, status: "error", reason: "invalid compartment" };
@@ -72,7 +104,27 @@ const replayCreate = async (ctx: ReplayCtx, item: ReplayItem): Promise<ReplayRes
         householdId: ctx.householdId,
       })
       .returning();
-    return { id, status: "ok", row };
+    return { id, status: "ok", row, serverId: row.id };
+  }
+
+  if (entity === "products") {
+    const name = (payload.name as string | undefined)?.trim();
+    const unit = payload.unit as string | undefined;
+    if (!name || !unit) return { id, status: "error", reason: "name and unit required" };
+    const rawCategoryId = payload.categoryId as number | null | undefined;
+    const categoryId = resolveTempId(rawCategoryId, tempIdMap);
+    const [row] = await ctx.db
+      .insert(products)
+      .values({
+        name,
+        unit: unit as "mL" | "L" | "g" | "kg" | "pieces" | "packs",
+        categoryId: categoryId && categoryId >= 0 ? categoryId : null,
+        householdId: ctx.householdId,
+        barcode: (payload.barcode as string | null | undefined) ?? null,
+      })
+      .returning();
+    if (tempId !== undefined) tempIdMap.set(tempId, row.id);
+    return { id, status: "ok", row, serverId: row.id };
   }
 
   if (entity === "categories") {
@@ -82,24 +134,27 @@ const replayCreate = async (ctx: ReplayCtx, item: ReplayItem): Promise<ReplayRes
       .insert(categories)
       .values({ name, householdId: ctx.householdId })
       .returning();
-    return { id, status: "ok", row };
+    if (tempId !== undefined) tempIdMap.set(tempId, row.id);
+    return { id, status: "ok", row, serverId: row.id };
   }
 
   // shoppingItems
   const name = (payload.name as string | undefined)?.trim();
   if (!name) return { id, status: "error", reason: "name required" };
+  const rawProductId = payload.productId as number | null | undefined;
+  const productId = resolveTempId(rawProductId, tempIdMap);
   const [row] = await ctx.db
     .insert(shoppingItems)
     .values({
       householdId: ctx.householdId,
-      productId: (payload.productId as number | null) ?? null,
+      productId: productId && productId >= 0 ? productId : null,
       name,
       quantity: (payload.quantity as number | null) ?? null,
       unit: (payload.unit as string | null) ?? null,
       createdBy: ctx.userId,
     })
     .returning();
-  return { id, status: "ok", row };
+  return { id, status: "ok", row, serverId: row.id };
 };
 
 const replayUpdate = async (ctx: ReplayCtx, item: ReplayItem): Promise<ReplayResult> => {
@@ -217,9 +272,13 @@ const replayDecrease = async (ctx: ReplayCtx, item: ReplayItem): Promise<ReplayR
   return { id, status: "ok" };
 };
 
-export const replayOne = async (ctx: ReplayCtx, item: ReplayItem): Promise<ReplayResult> => {
+export const replayOne = async (
+  ctx: ReplayCtx,
+  item: ReplayItem,
+  tempIdMap: Map<number, number>
+): Promise<ReplayResult> => {
   try {
-    if (item.op === "create") return await replayCreate(ctx, item);
+    if (item.op === "create") return await replayCreate(ctx, item, tempIdMap);
     if (item.op === "update") return await replayUpdate(ctx, item);
     if (item.op === "delete") return await replayDelete(ctx, item);
     if (item.op === "decrease") return await replayDecrease(ctx, item);
@@ -235,8 +294,11 @@ export const replayOne = async (ctx: ReplayCtx, item: ReplayItem): Promise<Repla
 
 export const replayBatch = async (ctx: ReplayCtx, items: ReplayItem[]): Promise<ReplayResult[]> => {
   const results: ReplayResult[] = [];
+  // Shared across the batch so a `products:create` (with tempId) earlier in
+  // the list resolves the negative productId on a later `entries:create`.
+  const tempIdMap = new Map<number, number>();
   for (const item of items) {
-    results.push(await replayOne(ctx, item));
+    results.push(await replayOne(ctx, item, tempIdMap));
   }
   return results;
 };

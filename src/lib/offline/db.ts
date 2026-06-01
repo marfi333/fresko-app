@@ -3,7 +3,7 @@ import { type DBSchema, type IDBPDatabase, openDB } from "idb";
 import type { MirrorEntity, MirrorRow, OutboxRecord } from "./types";
 
 const DB_NAME = "fresko-offline";
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 
 type MirrorSchema = DBSchema & {
   entries: {
@@ -17,6 +17,11 @@ type MirrorSchema = DBSchema & {
     indexes: { updatedAt: number };
   };
   shoppingItems: {
+    key: string;
+    value: MirrorRow;
+    indexes: { updatedAt: number };
+  };
+  products: {
     key: string;
     value: MirrorRow;
     indexes: { updatedAt: number };
@@ -47,6 +52,10 @@ const openMirror = () =>
       }
       if (!db.objectStoreNames.contains("shoppingItems")) {
         const store = db.createObjectStore("shoppingItems", { keyPath: "id" });
+        store.createIndex("updatedAt", "updatedAt");
+      }
+      if (!db.objectStoreNames.contains("products")) {
+        const store = db.createObjectStore("products", { keyPath: "id" });
         store.createIndex("updatedAt", "updatedAt");
       }
       if (!db.objectStoreNames.contains("outbox")) {

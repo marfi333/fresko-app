@@ -16,6 +16,7 @@ const ENTITY_LABEL: Record<MirrorEntity, string> = {
   entries: "Inventory",
   categories: "Category",
   shoppingItems: "Shopping",
+  products: "Product",
 };
 
 const OP_LABEL: Record<OutboxOp, string> = {

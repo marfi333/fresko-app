@@ -17,7 +17,12 @@ export const OfflineBadge = ({ className }: OfflineBadgeProps) => {
   const { online } = useOnline();
   const { count, failed } = usePendingCount();
   const [showBackOnline, setShowBackOnline] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const wasOffline = useRef(false);
+
+  // Avoid SSR/CSR mismatch: server renders assuming `online: true`, client may
+  // boot offline. Render nothing until after hydration.
+  useEffect(() => setMounted(true), []);
 
   // Flash a "Back online" success state when transitioning offline → online.
   // Only when the queue stays empty across the transition; if any items are
@@ -36,6 +41,7 @@ export const OfflineBadge = ({ className }: OfflineBadgeProps) => {
     return () => window.clearTimeout(timer);
   }, [online, count]);
 
+  if (!mounted) return null;
   if (online && count === 0 && !showBackOnline) return null;
 
   if (online && showBackOnline) {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { type QueryClient, useMutation, useQueryClient } from "@tanstack/react-query";
 
 import type { Entry } from "@/db/schema/entries";
 import { mirror } from "@/lib/offline/db";
@@ -31,6 +31,34 @@ type MarkAsWastedInput = {
   id: number;
 };
 
+type EntriesSnapshot = ReadonlyArray<readonly [readonly unknown[], Entry[] | undefined]>;
+
+const snapshotEntries = async (queryClient: QueryClient): Promise<EntriesSnapshot> => {
+  await queryClient.cancelQueries({ queryKey: ["entries"] });
+  return queryClient.getQueriesData<Entry[]>({ queryKey: ["entries"] }) as EntriesSnapshot;
+};
+
+const restoreSnapshot = (queryClient: QueryClient, snapshots: EntriesSnapshot) => {
+  for (const [key, snapshot] of snapshots) {
+    queryClient.setQueryData(key as readonly unknown[], snapshot);
+  }
+};
+
+const updateEntriesCaches = (queryClient: QueryClient, updater: (list: Entry[]) => Entry[]) => {
+  const matches = queryClient.getQueriesData<Entry[]>({ queryKey: ["entries"] });
+  for (const [key, list] of matches) {
+    if (!list) continue;
+    queryClient.setQueryData(key, updater(list));
+  }
+};
+
+const sortByExpiryAsc = (a: Entry, b: Entry): number => {
+  if (a.expiryDate && b.expiryDate) return a.expiryDate.getTime() - b.expiryDate.getTime();
+  if (a.expiryDate) return -1;
+  if (b.expiryDate) return 1;
+  return 0;
+};
+
 // Synthetic Entry returned when a create is enqueued offline. The id is a
 // negative `Date.now()` so it sorts last and is recognizable as offline-only.
 // The replay+refetch cycle replaces it with the real row.
@@ -49,18 +77,36 @@ const syntheticEntry = (input: CreateEntryInput): Entry => {
   };
 };
 
+// Common context shape returned by onMutate, consumed by onError for rollback.
+type EntriesMutationContext = { snapshots: EntriesSnapshot };
+
+const invalidateEntriesAndProducts = (queryClient: QueryClient) => {
+  queryClient.invalidateQueries({ queryKey: ["entries"] });
+  queryClient.invalidateQueries({ queryKey: ["products"] });
+};
+
+// When data?.kind === 'enqueued' we deliberately skip the post-mutation
+// refetch — the optimistic cache is the truth until reconnect, and the
+// query-bridge's online/focus listener will trigger drainAndInvalidate.
+const shouldRefetch = <T>(
+  data: { kind: "applied"; value: T } | { kind: "enqueued"; clientTs: number } | undefined
+) => data?.kind === "applied";
+
 export const useCreateEntry = () => {
   const queryClient = useQueryClient();
 
-  return useMutation<Entry, Error, CreateEntryInput>({
-    mutationFn: async (input) => {
+  return useMutation<
+    { kind: "applied"; value: Entry } | { kind: "enqueued"; clientTs: number },
+    Error,
+    CreateEntryInput,
+    EntriesMutationContext
+  >({
+    mutationFn: (input) => {
       const synthetic = syntheticEntry(input);
-      const result = await mutateOrEnqueue<Entry>({
+      return mutateOrEnqueue<Entry>({
         entity: "entries",
         op: "create",
         payload: { ...input },
-        // For offline creates, write a placeholder row keyed by the negative
-        // id so views that read the mirror see the new item immediately.
         mirrorRow: { ...synthetic, id: String(synthetic.id) } as unknown as MirrorRow,
         online: async () => {
           const res = await fetch("/api/entries", {
@@ -75,11 +121,26 @@ export const useCreateEntry = () => {
           return res.json();
         },
       });
-      return result.kind === "applied" ? result.value : synthetic;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["entries"] });
-      queryClient.invalidateQueries({ queryKey: ["products"] });
+    onMutate: async (input) => {
+      const snapshots = await snapshotEntries(queryClient);
+      const synthetic = syntheticEntry(input);
+      updateEntriesCaches(queryClient, (list) => [...list, synthetic]);
+      return { snapshots };
+    },
+    onError: (_err, _input, context) => {
+      if (context) restoreSnapshot(queryClient, context.snapshots);
+    },
+    onSuccess: (data) => {
+      if (data.kind !== "applied") return;
+      // Replace the synthetic row (negative id) with the real one returned by the server.
+      const real = data.value;
+      updateEntriesCaches(queryClient, (list) =>
+        list.map((e) => (e.id < 0 && e.productId === real.productId ? real : e))
+      );
+    },
+    onSettled: (data) => {
+      if (shouldRefetch(data)) invalidateEntriesAndProducts(queryClient);
     },
   });
 };
@@ -87,7 +148,12 @@ export const useCreateEntry = () => {
 export const useUpdateEntry = () => {
   const queryClient = useQueryClient();
 
-  return useMutation<Entry, Error, UpdateEntryInput>({
+  return useMutation<
+    { kind: "applied"; value: Entry } | { kind: "enqueued"; clientTs: number },
+    Error,
+    UpdateEntryInput,
+    EntriesMutationContext
+  >({
     mutationFn: async ({ id, ...updates }) => {
       const mirrorId = String(id);
       const existing = await mirror.get("entries", mirrorId);
@@ -95,7 +161,7 @@ export const useUpdateEntry = () => {
         ? ({ ...existing, ...updates, updatedAt: Date.now() } as MirrorRow)
         : undefined;
 
-      const result = await mutateOrEnqueue<Entry>({
+      return mutateOrEnqueue<Entry>({
         entity: "entries",
         op: "update",
         serverId: id,
@@ -114,10 +180,33 @@ export const useUpdateEntry = () => {
           return res.json();
         },
       });
-      return result.kind === "applied" ? result.value : (optimistic as unknown as Entry);
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["entries"] });
+    onMutate: async ({ id, ...updates }) => {
+      const snapshots = await snapshotEntries(queryClient);
+      updateEntriesCaches(queryClient, (list) =>
+        list.map((e) =>
+          e.id === id
+            ? ({
+                ...e,
+                ...updates,
+                expiryDate:
+                  updates.expiryDate === undefined
+                    ? e.expiryDate
+                    : updates.expiryDate
+                      ? new Date(updates.expiryDate)
+                      : null,
+                updatedAt: new Date(),
+              } as Entry)
+            : e
+        )
+      );
+      return { snapshots };
+    },
+    onError: (_err, _input, context) => {
+      if (context) restoreSnapshot(queryClient, context.snapshots);
+    },
+    onSettled: (data) => {
+      if (shouldRefetch(data)) invalidateEntriesAndProducts(queryClient);
     },
   });
 };
@@ -125,9 +214,14 @@ export const useUpdateEntry = () => {
 export const useDeleteEntry = () => {
   const queryClient = useQueryClient();
 
-  return useMutation<{ success: boolean }, Error, number>({
-    mutationFn: async (id) => {
-      const result = await mutateOrEnqueue<{ success: boolean }>({
+  return useMutation<
+    { kind: "applied"; value: { success: boolean } } | { kind: "enqueued"; clientTs: number },
+    Error,
+    number,
+    EntriesMutationContext
+  >({
+    mutationFn: (id) =>
+      mutateOrEnqueue<{ success: boolean }>({
         entity: "entries",
         op: "delete",
         serverId: id,
@@ -141,12 +235,17 @@ export const useDeleteEntry = () => {
           }
           return res.json();
         },
-      });
-      return result.kind === "applied" ? result.value : { success: true };
+      }),
+    onMutate: async (id) => {
+      const snapshots = await snapshotEntries(queryClient);
+      updateEntriesCaches(queryClient, (list) => list.filter((e) => e.id !== id));
+      return { snapshots };
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["entries"] });
-      queryClient.invalidateQueries({ queryKey: ["products"] });
+    onError: (_err, _input, context) => {
+      if (context) restoreSnapshot(queryClient, context.snapshots);
+    },
+    onSettled: (data) => {
+      if (shouldRefetch(data)) invalidateEntriesAndProducts(queryClient);
     },
   });
 };
@@ -154,22 +253,19 @@ export const useDeleteEntry = () => {
 export const useDecreaseQuantity = () => {
   const queryClient = useQueryClient();
 
-  return useMutation<{ decreasedTotal: number }, Error, DecreaseQuantityInput>({
+  return useMutation<
+    { kind: "applied"; value: { decreasedTotal: number } } | { kind: "enqueued"; clientTs: number },
+    Error,
+    DecreaseQuantityInput,
+    EntriesMutationContext
+  >({
     mutationFn: async (input) => {
-      // Optimistic decrease across the mirror (FIFO by expiry, mirroring the
-      // server's logic). For each affected entry, either decrement quantity
-      // or delete the row if it goes to zero.
+      // Compute mirror-side FIFO ops from the IDB mirror so durable state
+      // stays consistent with the optimistic cache update we did in onMutate.
       const productEntries = (await mirror.getAll("entries")).filter(
         (row) => (row as unknown as Entry).productId === input.productId
       );
-      productEntries.sort((a, b) => {
-        const ae = (a as unknown as Entry).expiryDate;
-        const be = (b as unknown as Entry).expiryDate;
-        if (ae && be) return ae.getTime() - be.getTime();
-        if (ae) return -1;
-        if (be) return 1;
-        return 0;
-      });
+      productEntries.sort((a, b) => sortByExpiryAsc(a as unknown as Entry, b as unknown as Entry));
 
       const extraMirrorOps: MirrorOp[] = [];
       let remaining = input.amount;
@@ -192,7 +288,7 @@ export const useDecreaseQuantity = () => {
         }
       }
 
-      const result = await mutateOrEnqueue<{ decreasedTotal: number }>({
+      return mutateOrEnqueue<{ decreasedTotal: number }>({
         entity: "entries",
         op: "decrease",
         payload: input,
@@ -210,11 +306,49 @@ export const useDecreaseQuantity = () => {
           return res.json();
         },
       });
-      return result.kind === "applied" ? result.value : { decreasedTotal: input.amount };
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["entries"] });
-      queryClient.invalidateQueries({ queryKey: ["products"] });
+    onMutate: async (input) => {
+      const snapshots = await snapshotEntries(queryClient);
+      updateEntriesCaches(queryClient, (list) => {
+        const productEntries = list.filter((e) => e.productId === input.productId);
+        if (productEntries.length === 0) return list;
+        productEntries.sort(sortByExpiryAsc);
+
+        const updates = new Map<number, Entry | null>();
+        let remaining = input.amount;
+        for (const entry of productEntries) {
+          if (remaining <= 0) break;
+          const deduction = Math.min(remaining, entry.quantity);
+          remaining -= deduction;
+          if (deduction >= entry.quantity) {
+            updates.set(entry.id, null);
+          } else {
+            updates.set(entry.id, {
+              ...entry,
+              quantity: entry.quantity - deduction,
+              updatedAt: new Date(),
+            });
+          }
+        }
+
+        const result: Entry[] = [];
+        for (const e of list) {
+          if (!updates.has(e.id)) {
+            result.push(e);
+            continue;
+          }
+          const next = updates.get(e.id);
+          if (next) result.push(next);
+        }
+        return result;
+      });
+      return { snapshots };
+    },
+    onError: (_err, _input, context) => {
+      if (context) restoreSnapshot(queryClient, context.snapshots);
+    },
+    onSettled: (data) => {
+      if (shouldRefetch(data)) invalidateEntriesAndProducts(queryClient);
     },
   });
 };
@@ -222,7 +356,7 @@ export const useDecreaseQuantity = () => {
 export const useDeleteAllProductEntries = () => {
   const queryClient = useQueryClient();
 
-  return useMutation<{ success: true }, Error, number[]>({
+  return useMutation<{ success: true }, Error, number[], EntriesMutationContext>({
     mutationFn: async (ids) => {
       for (const id of ids) {
         await mutateOrEnqueue<{ success: boolean }>({
@@ -243,9 +377,18 @@ export const useDeleteAllProductEntries = () => {
       }
       return { success: true };
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["entries"] });
-      queryClient.invalidateQueries({ queryKey: ["products"] });
+    onMutate: async (ids) => {
+      const snapshots = await snapshotEntries(queryClient);
+      const idSet = new Set(ids);
+      updateEntriesCaches(queryClient, (list) => list.filter((e) => !idSet.has(e.id)));
+      return { snapshots };
+    },
+    onError: (_err, _input, context) => {
+      if (context) restoreSnapshot(queryClient, context.snapshots);
+    },
+    onSettled: () => {
+      // Always refetch — at least one of the deletes resolved synchronously.
+      invalidateEntriesAndProducts(queryClient);
     },
   });
 };
@@ -253,9 +396,14 @@ export const useDeleteAllProductEntries = () => {
 export const useMarkAsWasted = () => {
   const queryClient = useQueryClient();
 
-  return useMutation<{ success: boolean }, Error, MarkAsWastedInput>({
-    mutationFn: async ({ id }) => {
-      const result = await mutateOrEnqueue<{ success: boolean }>({
+  return useMutation<
+    { kind: "applied"; value: { success: boolean } } | { kind: "enqueued"; clientTs: number },
+    Error,
+    MarkAsWastedInput,
+    EntriesMutationContext
+  >({
+    mutationFn: ({ id }) =>
+      mutateOrEnqueue<{ success: boolean }>({
         entity: "entries",
         op: "delete",
         serverId: id,
@@ -269,12 +417,17 @@ export const useMarkAsWasted = () => {
           }
           return res.json();
         },
-      });
-      return result.kind === "applied" ? result.value : { success: true };
+      }),
+    onMutate: async ({ id }) => {
+      const snapshots = await snapshotEntries(queryClient);
+      updateEntriesCaches(queryClient, (list) => list.filter((e) => e.id !== id));
+      return { snapshots };
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["entries"] });
-      queryClient.invalidateQueries({ queryKey: ["products"] });
+    onError: (_err, _input, context) => {
+      if (context) restoreSnapshot(queryClient, context.snapshots);
+    },
+    onSettled: (data) => {
+      if (shouldRefetch(data)) invalidateEntriesAndProducts(queryClient);
     },
   });
 };

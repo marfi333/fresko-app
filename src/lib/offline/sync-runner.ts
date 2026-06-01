@@ -35,6 +35,7 @@ const buildReplayItem = (record: OutboxRecord) => ({
   serverId: record.serverId,
   payload: record.payload,
   clientTs: record.clientTs,
+  tempId: record.tempId,
 });
 
 const applyResult = async (record: OutboxRecord, result: ReplayResultRow): Promise<void> => {

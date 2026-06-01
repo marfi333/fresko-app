@@ -78,30 +78,50 @@ export const CategoryCombobox = ({
         updatedAt: new Date(now),
       };
 
-      const result = await mutateOrEnqueue<Category>({
-        entity: "categories",
-        op: "create",
-        payload: { name: trimmed },
-        mirrorRow: { ...synthetic, id: String(synthetic.id) } as unknown as MirrorRow,
-        online: async () => {
-          const res = await fetch("/api/categories", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ name: trimmed }),
-          });
-          if (!res.ok) {
-            const body = (await res.json()) as { error?: string };
-            throw new Error(body.error ?? "Failed to create category");
-          }
-          return res.json();
-        },
-      });
+      // Optimistic cache write so the new category appears in dropdowns
+      // immediately, regardless of online/offline status.
+      queryClient.setQueryData<Category[]>(["categories"], (prev) =>
+        prev ? [...prev, synthetic] : [synthetic]
+      );
 
-      const created = result.kind === "applied" ? result.value : synthetic;
-      await queryClient.invalidateQueries({ queryKey: ["categories"] });
-      onChange(created.id);
-      setSearch(created.name);
-      setOpen(false);
+      try {
+        const result = await mutateOrEnqueue<Category>({
+          entity: "categories",
+          op: "create",
+          payload: { name: trimmed },
+          mirrorRow: { ...synthetic, id: String(synthetic.id) } as unknown as MirrorRow,
+          online: async () => {
+            const res = await fetch("/api/categories", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ name: trimmed }),
+            });
+            if (!res.ok) {
+              const body = (await res.json()) as { error?: string };
+              throw new Error(body.error ?? "Failed to create category");
+            }
+            return res.json();
+          },
+        });
+
+        const created = result.kind === "applied" ? result.value : synthetic;
+        if (result.kind === "applied") {
+          // Replace the synthetic with the real row in cache.
+          queryClient.setQueryData<Category[]>(["categories"], (prev) =>
+            prev ? prev.map((c) => (c.id === synthetic.id ? created : c)) : [created]
+          );
+          await queryClient.invalidateQueries({ queryKey: ["categories"] });
+        }
+        onChange(created.id);
+        setSearch(created.name);
+        setOpen(false);
+      } catch (err) {
+        // Roll back on hard failure (validation error, etc).
+        queryClient.setQueryData<Category[]>(["categories"], (prev) =>
+          prev ? prev.filter((c) => c.id !== synthetic.id) : prev
+        );
+        throw err;
+      }
     } finally {
       setCreating(false);
     }

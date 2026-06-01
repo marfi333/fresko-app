@@ -14,6 +14,8 @@ export type EnqueueInput = {
   mirrorRow?: MirrorRow;
   /** Multi-row mirror operations applied atomically with the outbox write. */
   extraMirrorOps?: MirrorOp[];
+  /** Negative client temp id for new-product/category offline creation. */
+  tempId?: number;
 };
 
 export type EnqueueOptions = {
@@ -42,6 +44,7 @@ export const enqueueMutation = async (
     clientTs: Date.now(),
     status: "pending",
     attempts: 0,
+    tempId: input.tempId,
   };
 
   // Single multi-store transaction: mirror writes + outbox enqueue together.

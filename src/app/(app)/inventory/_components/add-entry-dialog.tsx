@@ -5,7 +5,10 @@ import { Plus } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import type { Product } from "@/db/schema/products";
 import { useCreateEntry } from "@/hooks/use-entry-mutations";
+import { mutateOrEnqueue } from "@/lib/offline/mutate-or-enqueue";
+import type { MirrorRow } from "@/lib/offline/types";
 import { EntryForm, type EntryFormData } from "./entry-form";
 import { ProductAutocomplete, type ProductChoice } from "./product-autocomplete";
 
@@ -55,23 +58,64 @@ export const AddEntryDialog = ({
     if (data.productChoice.type === "existing") {
       productId = data.productChoice.product.id;
     } else {
-      const res = await fetch("/api/products", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: data.productChoice.name,
-          unit: data.unit,
-          categoryId: data.categoryId,
-          ...(data.barcode ? { barcode: data.barcode } : {}),
-        }),
+      // Create the product through mutateOrEnqueue so it works offline.
+      // Offline path uses a negative temp id; the replay endpoint resolves
+      // sibling references (the entries:create that runs next).
+      const tempId = -Date.now();
+      const productPayload = {
+        name: data.productChoice.name,
+        unit: data.unit,
+        categoryId: data.categoryId,
+        ...(data.barcode ? { barcode: data.barcode } : {}),
+      };
+      const synthetic: Product = {
+        id: tempId,
+        name: data.productChoice.name,
+        unit: data.unit as Product["unit"],
+        categoryId: data.categoryId ?? null,
+        householdId: "offline",
+        barcode: data.barcode ?? null,
+        createdAt: new Date(),
+      };
+      // Optimistic products cache write so dropdowns/lookups see it.
+      queryClient.setQueryData<Product[]>(["products", ""], (prev) =>
+        prev ? [...prev, synthetic] : [synthetic]
+      );
+
+      const result = await mutateOrEnqueue<Product>({
+        entity: "products",
+        op: "create",
+        payload: productPayload,
+        tempId,
+        mirrorRow: {
+          ...synthetic,
+          id: String(tempId),
+          updatedAt: Date.now(),
+        } as unknown as MirrorRow,
+        online: async () => {
+          const res = await fetch("/api/products", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(productPayload),
+          });
+          if (!res.ok) {
+            const body = (await res.json()) as { error?: string };
+            throw new Error(body.error ?? "Failed to create product");
+          }
+          return res.json();
+        },
       });
-      if (!res.ok) {
-        const body = (await res.json()) as { error?: string };
-        throw new Error(body.error ?? "Failed to create product");
+
+      if (result.kind === "applied") {
+        productId = result.value.id;
+        // Replace synthetic with real in cache.
+        queryClient.setQueryData<Product[]>(["products", ""], (prev) =>
+          prev ? prev.map((p) => (p.id === tempId ? result.value : p)) : prev
+        );
+        queryClient.invalidateQueries({ queryKey: ["products"] });
+      } else {
+        productId = tempId;
       }
-      const product = (await res.json()) as { id: number };
-      productId = product.id;
-      queryClient.invalidateQueries({ queryKey: ["products"] });
     }
 
     createEntry.mutate(

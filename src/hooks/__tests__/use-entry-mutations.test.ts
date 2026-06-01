@@ -150,7 +150,7 @@ describe("useDecreaseQuantity", () => {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ productId: 1, amount: 3 }),
     });
-    expect(result.current.data).toEqual({ decreasedTotal: 3 });
+    expect(result.current.data).toEqual({ kind: "applied", value: { decreasedTotal: 3 } });
   });
 
   it("handles error when amount exceeds available", async () => {

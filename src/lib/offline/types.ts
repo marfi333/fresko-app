@@ -1,4 +1,4 @@
-export type MirrorEntity = "entries" | "categories" | "shoppingItems";
+export type MirrorEntity = "entries" | "categories" | "shoppingItems" | "products";
 
 export type MirrorRow = {
   id: string;
@@ -21,6 +21,10 @@ export type OutboxRecord = {
   status: OutboxStatus;
   attempts: number;
   lastError?: string;
+  // Negative client-generated temp id for create ops. The replay endpoint
+  // resolves sibling references (e.g. an entries:create payload.productId)
+  // to the real id assigned during this batch.
+  tempId?: number;
 };
 
 export type MetaRow = {

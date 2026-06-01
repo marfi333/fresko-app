@@ -1,6 +1,6 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { type QueryClient, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ShoppingItem } from "@/db/schema/shopping-items";
 import { mirror } from "@/lib/offline/db";
 import { mutateOrEnqueue } from "@/lib/offline/mutate-or-enqueue";
@@ -36,13 +36,61 @@ type UpdateShoppingItemInput = {
 const SHOPPING_KEY = ["shopping"] as const;
 const SUGGESTIONS_KEY = ["shopping", "suggestions"] as const;
 
+const reviveShoppingItem = (row: unknown): ShoppingItem => {
+  const r = row as Record<string, unknown>;
+  const out: Record<string, unknown> = {
+    ...r,
+    id: typeof r.id === "string" ? Number(r.id) : (r.id as number),
+  };
+  if (r.purchasedAt !== undefined) {
+    out.purchasedAt = r.purchasedAt ? new Date(r.purchasedAt as string | number | Date) : null;
+  }
+  if (r.createdAt !== undefined && r.createdAt !== null) {
+    out.createdAt = new Date(r.createdAt as string | number | Date);
+  }
+  if (r.updatedAt !== undefined && r.updatedAt !== null) {
+    out.updatedAt =
+      typeof r.updatedAt === "number"
+        ? new Date(r.updatedAt)
+        : new Date(r.updatedAt as string | Date);
+  }
+  return out as unknown as ShoppingItem;
+};
+
+const writeShoppingToMirror = (items: ShoppingItem[]) => {
+  for (const i of items) {
+    const row: MirrorRow = {
+      ...(i as unknown as Record<string, unknown>),
+      id: String(i.id),
+      updatedAt: i.updatedAt instanceof Date ? i.updatedAt.getTime() : Date.now(),
+    } as MirrorRow;
+    void mirror.put("shoppingItems", row);
+  }
+};
+
 export const useShoppingList = () =>
   useQuery<ShoppingListResponse>({
     queryKey: SHOPPING_KEY,
     queryFn: async () => {
-      const res = await fetch("/api/shopping");
-      if (!res.ok) throw new Error("Failed to fetch shopping list");
-      return res.json();
+      try {
+        const res = await fetch("/api/shopping");
+        if (!res.ok) throw new Error("Failed to fetch shopping list");
+        const data = (await res.json()) as ShoppingListResponse;
+        const all = [...data.active, ...data.purchased].map(reviveShoppingItem);
+        writeShoppingToMirror(all);
+        return {
+          active: data.active.map(reviveShoppingItem),
+          purchased: data.purchased.map(reviveShoppingItem),
+        };
+      } catch (err) {
+        if (!(err instanceof TypeError)) throw err;
+        const rows = await mirror.getAll("shoppingItems");
+        const all = rows.map(reviveShoppingItem);
+        return {
+          active: all.filter((i) => !i.purchased),
+          purchased: all.filter((i) => i.purchased),
+        };
+      }
     },
   });
 
@@ -50,9 +98,14 @@ export const useShoppingSuggestions = () =>
   useQuery<{ suggestions: ShoppingSuggestion[] }>({
     queryKey: SUGGESTIONS_KEY,
     queryFn: async () => {
-      const res = await fetch("/api/shopping/suggestions");
-      if (!res.ok) throw new Error("Failed to fetch suggestions");
-      return res.json();
+      try {
+        const res = await fetch("/api/shopping/suggestions");
+        if (!res.ok) throw new Error("Failed to fetch suggestions");
+        return res.json();
+      } catch (err) {
+        if (err instanceof TypeError) return { suggestions: [] };
+        throw err;
+      }
     },
   });
 
@@ -73,13 +126,45 @@ const syntheticShoppingItem = (input: CreateShoppingItemInput): ShoppingItem => 
   };
 };
 
+type ShoppingMutationContext = { snapshot: ShoppingListResponse | undefined };
+
+const snapshotShopping = async (
+  queryClient: QueryClient
+): Promise<ShoppingListResponse | undefined> => {
+  await queryClient.cancelQueries({ queryKey: SHOPPING_KEY });
+  return queryClient.getQueryData<ShoppingListResponse>(SHOPPING_KEY);
+};
+
+const restoreShopping = (queryClient: QueryClient, snap: ShoppingListResponse | undefined) => {
+  queryClient.setQueryData(SHOPPING_KEY, snap);
+};
+
+const updateShoppingCache = (
+  queryClient: QueryClient,
+  updater: (prev: ShoppingListResponse) => ShoppingListResponse
+) => {
+  queryClient.setQueryData<ShoppingListResponse>(SHOPPING_KEY, (prev) => {
+    if (!prev) return prev;
+    return updater(prev);
+  });
+};
+
+const shouldRefetchShopping = <T>(
+  data: { kind: "applied"; value: T } | { kind: "enqueued"; clientTs: number } | undefined
+) => data?.kind === "applied";
+
 export const useCreateShoppingItem = () => {
   const queryClient = useQueryClient();
 
-  return useMutation<ShoppingItem, Error, CreateShoppingItemInput>({
-    mutationFn: async (input) => {
+  return useMutation<
+    { kind: "applied"; value: ShoppingItem } | { kind: "enqueued"; clientTs: number },
+    Error,
+    CreateShoppingItemInput,
+    ShoppingMutationContext
+  >({
+    mutationFn: (input) => {
       const synthetic = syntheticShoppingItem(input);
-      const result = await mutateOrEnqueue<ShoppingItem>({
+      return mutateOrEnqueue<ShoppingItem>({
         entity: "shoppingItems",
         op: "create",
         payload: { ...input },
@@ -97,11 +182,32 @@ export const useCreateShoppingItem = () => {
           return res.json();
         },
       });
-      return result.kind === "applied" ? result.value : synthetic;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: SHOPPING_KEY });
-      queryClient.invalidateQueries({ queryKey: SUGGESTIONS_KEY });
+    onMutate: async (input) => {
+      const snapshot = await snapshotShopping(queryClient);
+      const synthetic = syntheticShoppingItem(input);
+      updateShoppingCache(queryClient, (prev) => ({
+        active: [...prev.active, synthetic],
+        purchased: prev.purchased,
+      }));
+      return { snapshot };
+    },
+    onError: (_err, _input, context) => {
+      if (context) restoreShopping(queryClient, context.snapshot);
+    },
+    onSuccess: (data) => {
+      if (data.kind !== "applied") return;
+      const real = data.value;
+      updateShoppingCache(queryClient, (prev) => ({
+        active: prev.active.map((i) => (i.id < 0 ? real : i)),
+        purchased: prev.purchased,
+      }));
+    },
+    onSettled: (data) => {
+      if (shouldRefetchShopping(data)) {
+        queryClient.invalidateQueries({ queryKey: SHOPPING_KEY });
+        queryClient.invalidateQueries({ queryKey: SUGGESTIONS_KEY });
+      }
     },
   });
 };
@@ -109,7 +215,12 @@ export const useCreateShoppingItem = () => {
 export const useUpdateShoppingItem = () => {
   const queryClient = useQueryClient();
 
-  return useMutation<ShoppingItem, Error, UpdateShoppingItemInput>({
+  return useMutation<
+    { kind: "applied"; value: ShoppingItem } | { kind: "enqueued"; clientTs: number },
+    Error,
+    UpdateShoppingItemInput,
+    ShoppingMutationContext
+  >({
     mutationFn: async ({ id, ...updates }) => {
       const mirrorId = String(id);
       const existing = await mirror.get("shoppingItems", mirrorId);
@@ -117,7 +228,7 @@ export const useUpdateShoppingItem = () => {
         ? ({ ...existing, ...updates, updatedAt: Date.now() } as MirrorRow)
         : undefined;
 
-      const result = await mutateOrEnqueue<ShoppingItem>({
+      return mutateOrEnqueue<ShoppingItem>({
         entity: "shoppingItems",
         op: "update",
         serverId: id,
@@ -136,11 +247,35 @@ export const useUpdateShoppingItem = () => {
           return res.json();
         },
       });
-      return result.kind === "applied" ? result.value : (optimistic as unknown as ShoppingItem);
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: SHOPPING_KEY });
-      queryClient.invalidateQueries({ queryKey: SUGGESTIONS_KEY });
+    onMutate: async ({ id, ...updates }) => {
+      const snapshot = await snapshotShopping(queryClient);
+      updateShoppingCache(queryClient, (prev) => {
+        const apply = (i: ShoppingItem): ShoppingItem =>
+          i.id === id ? ({ ...i, ...updates, updatedAt: new Date() } as ShoppingItem) : i;
+        // If `purchased` flips, move the item between buckets.
+        if (updates.purchased === undefined) {
+          return {
+            active: prev.active.map(apply),
+            purchased: prev.purchased.map(apply),
+          };
+        }
+        const all = [...prev.active.map(apply), ...prev.purchased.map(apply)];
+        return {
+          active: all.filter((i) => !i.purchased),
+          purchased: all.filter((i) => i.purchased),
+        };
+      });
+      return { snapshot };
+    },
+    onError: (_err, _input, context) => {
+      if (context) restoreShopping(queryClient, context.snapshot);
+    },
+    onSettled: (data) => {
+      if (shouldRefetchShopping(data)) {
+        queryClient.invalidateQueries({ queryKey: SHOPPING_KEY });
+        queryClient.invalidateQueries({ queryKey: SUGGESTIONS_KEY });
+      }
     },
   });
 };
@@ -148,9 +283,14 @@ export const useUpdateShoppingItem = () => {
 export const useDeleteShoppingItem = () => {
   const queryClient = useQueryClient();
 
-  return useMutation<{ success: boolean }, Error, number>({
-    mutationFn: async (id) => {
-      const result = await mutateOrEnqueue<{ success: boolean }>({
+  return useMutation<
+    { kind: "applied"; value: { success: boolean } } | { kind: "enqueued"; clientTs: number },
+    Error,
+    number,
+    ShoppingMutationContext
+  >({
+    mutationFn: (id) =>
+      mutateOrEnqueue<{ success: boolean }>({
         entity: "shoppingItems",
         op: "delete",
         serverId: id,
@@ -164,12 +304,23 @@ export const useDeleteShoppingItem = () => {
           }
           return res.json();
         },
-      });
-      return result.kind === "applied" ? result.value : { success: true };
+      }),
+    onMutate: async (id) => {
+      const snapshot = await snapshotShopping(queryClient);
+      updateShoppingCache(queryClient, (prev) => ({
+        active: prev.active.filter((i) => i.id !== id),
+        purchased: prev.purchased.filter((i) => i.id !== id),
+      }));
+      return { snapshot };
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: SHOPPING_KEY });
-      queryClient.invalidateQueries({ queryKey: SUGGESTIONS_KEY });
+    onError: (_err, _input, context) => {
+      if (context) restoreShopping(queryClient, context.snapshot);
+    },
+    onSettled: (data) => {
+      if (shouldRefetchShopping(data)) {
+        queryClient.invalidateQueries({ queryKey: SHOPPING_KEY });
+        queryClient.invalidateQueries({ queryKey: SUGGESTIONS_KEY });
+      }
     },
   });
 };

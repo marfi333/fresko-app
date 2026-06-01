@@ -6,19 +6,17 @@ export const ServiceWorkerRegister = () => {
   useEffect(() => {
     if (!("serviceWorker" in navigator)) return;
 
-    if (process.env.NODE_ENV !== "production") {
-      // Dev mode: forcibly unregister any worker left over from a prior prod
-      // build. A stale SW will intercept dev fetches with cached prod bundle
-      // routes and cause requests to hang.
-      void navigator.serviceWorker.getRegistrations().then((regs) => {
-        for (const reg of regs) void reg.unregister();
-      });
-      return;
-    }
-
+    // Register in BOTH dev and prod. The SW uses NetworkOnly for mutating
+    // /api/* requests so offline-write semantics are unchanged, and
+    // NetworkFirst for navigations so offline page transitions work after a
+    // page has been visited once.
     const load = async () => {
       const { Serwist } = await import("@serwist/window");
-      const serwist = new Serwist("/sw.js", { scope: "/", type: "classic" });
+      const serwist = new Serwist("/sw.js", {
+        scope: "/",
+        type: "classic",
+        updateViaCache: "none",
+      });
       await serwist.register();
     };
 

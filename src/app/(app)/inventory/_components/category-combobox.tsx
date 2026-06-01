@@ -5,6 +5,8 @@ import { useEffect, useRef, useState } from "react";
 import { Input } from "@/components/ui/input";
 import type { Category } from "@/db/schema/categories";
 import { useCategories } from "@/hooks/use-categories";
+import { mutateOrEnqueue } from "@/lib/offline/mutate-or-enqueue";
+import type { MirrorRow } from "@/lib/offline/types";
 
 type CategoryComboboxProps = {
   value?: number;
@@ -67,16 +69,35 @@ export const CategoryCombobox = ({
     if (!trimmed || creating) return;
     setCreating(true);
     try {
-      const res = await fetch("/api/categories", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: trimmed }),
+      const now = Date.now();
+      const synthetic: Category = {
+        id: -now,
+        name: trimmed,
+        householdId: "offline",
+        createdAt: new Date(now),
+        updatedAt: new Date(now),
+      };
+
+      const result = await mutateOrEnqueue<Category>({
+        entity: "categories",
+        op: "create",
+        payload: { name: trimmed },
+        mirrorRow: { ...synthetic, id: String(synthetic.id) } as unknown as MirrorRow,
+        online: async () => {
+          const res = await fetch("/api/categories", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ name: trimmed }),
+          });
+          if (!res.ok) {
+            const body = (await res.json()) as { error?: string };
+            throw new Error(body.error ?? "Failed to create category");
+          }
+          return res.json();
+        },
       });
-      if (!res.ok) {
-        const body = (await res.json()) as { error?: string };
-        throw new Error(body.error ?? "Failed to create category");
-      }
-      const created = (await res.json()) as Category;
+
+      const created = result.kind === "applied" ? result.value : synthetic;
       await queryClient.invalidateQueries({ queryKey: ["categories"] });
       onChange(created.id);
       setSearch(created.name);

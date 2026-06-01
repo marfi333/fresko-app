@@ -3,6 +3,8 @@ import { ulid } from "ulid";
 import { getMirrorDb, notifyOutbox } from "./db";
 import type { MirrorEntity, MirrorRow, OutboxOp, OutboxRecord } from "./types";
 
+export type MirrorOp = { kind: "put"; row: MirrorRow } | { kind: "del"; id: string };
+
 export type EnqueueInput = {
   entity: MirrorEntity;
   op: OutboxOp;
@@ -10,6 +12,8 @@ export type EnqueueInput = {
   serverId?: number;
   mirrorId?: string;
   mirrorRow?: MirrorRow;
+  /** Multi-row mirror operations applied atomically with the outbox write. */
+  extraMirrorOps?: MirrorOp[];
 };
 
 export type EnqueueOptions = {
@@ -40,7 +44,7 @@ export const enqueueMutation = async (
     attempts: 0,
   };
 
-  // Single multi-store transaction: mirror write + outbox enqueue together.
+  // Single multi-store transaction: mirror writes + outbox enqueue together.
   const stores = ["outbox", input.entity] as const;
   const tx = db.transaction(stores, "readwrite");
 
@@ -50,6 +54,14 @@ export const enqueueMutation = async (
     await tx.objectStore(input.entity).delete(input.mirrorId);
   } else if (input.mirrorRow) {
     await tx.objectStore(input.entity).put(input.mirrorRow);
+  }
+
+  if (input.extraMirrorOps && input.extraMirrorOps.length > 0) {
+    const store = tx.objectStore(input.entity);
+    for (const op of input.extraMirrorOps) {
+      if (op.kind === "put") await store.put(op.row);
+      else await store.delete(op.id);
+    }
   }
 
   await tx.done;

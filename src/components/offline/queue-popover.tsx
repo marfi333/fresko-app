@@ -22,6 +22,7 @@ const OP_LABEL: Record<OutboxOp, string> = {
   create: "Add",
   update: "Edit",
   delete: "Delete",
+  decrease: "Use",
 };
 
 const formatRelative = (ms: number): string => {

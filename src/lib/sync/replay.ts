@@ -1,10 +1,10 @@
-import { and, eq } from "drizzle-orm";
+import { and, asc, eq } from "drizzle-orm";
 
-import { categories, entries, shoppingItems } from "@/db/schema";
+import { categories, entries, shoppingItems, usageEvents } from "@/db/schema";
 import { decideLWW } from "./lww";
 
 export type ReplayEntity = "entries" | "categories" | "shoppingItems";
-export type ReplayOp = "create" | "update" | "delete";
+export type ReplayOp = "create" | "update" | "delete" | "decrease";
 
 export type ReplayItem = {
   id: string;
@@ -159,11 +159,70 @@ const replayDelete = async (ctx: ReplayCtx, item: ReplayItem): Promise<ReplayRes
   return { id, status: "ok" };
 };
 
+const replayDecrease = async (ctx: ReplayCtx, item: ReplayItem): Promise<ReplayResult> => {
+  const { entity, payload, id } = item;
+  if (entity !== "entries") {
+    return { id, status: "error", reason: "decrease only valid on entries" };
+  }
+  const productId = payload.productId as number | undefined;
+  const amount = payload.amount as number | undefined;
+  if (!productId || !amount || amount <= 0) {
+    return { id, status: "error", reason: "productId and amount (> 0) required" };
+  }
+
+  // Decrease is best-effort: if the user has less inventory now than they did
+  // when they queued the op, surface as 'skipped' (no error, just out of sync
+  // — the server's truth wins).
+  const productEntries = await ctx.db
+    .select()
+    .from(entries)
+    .where(and(eq(entries.productId, productId), eq(entries.householdId, ctx.householdId)))
+    .orderBy(asc(entries.expiryDate));
+
+  if (productEntries.length === 0) return { id, status: "gone" };
+
+  const totalAvailable = productEntries.reduce(
+    (sum: number, e: { quantity: number }) => sum + e.quantity,
+    0
+  );
+  if (amount > totalAvailable) {
+    return { id, status: "skipped", reason: "insufficient quantity at replay time" };
+  }
+
+  let remaining = amount;
+  for (const entry of productEntries) {
+    if (remaining <= 0) break;
+    const deduction = Math.min(remaining, entry.quantity);
+    remaining -= deduction;
+
+    await ctx.db.insert(usageEvents).values({
+      entryId: entry.id,
+      productId,
+      quantityDelta: -deduction,
+      reason: "consumed",
+      userId: ctx.userId,
+      householdId: ctx.householdId,
+    });
+
+    if (deduction >= entry.quantity) {
+      await ctx.db.delete(entries).where(eq(entries.id, entry.id));
+    } else {
+      await ctx.db
+        .update(entries)
+        .set({ quantity: entry.quantity - deduction })
+        .where(eq(entries.id, entry.id));
+    }
+  }
+
+  return { id, status: "ok" };
+};
+
 export const replayOne = async (ctx: ReplayCtx, item: ReplayItem): Promise<ReplayResult> => {
   try {
     if (item.op === "create") return await replayCreate(ctx, item);
     if (item.op === "update") return await replayUpdate(ctx, item);
     if (item.op === "delete") return await replayDelete(ctx, item);
+    if (item.op === "decrease") return await replayDecrease(ctx, item);
     return { id: item.id, status: "error", reason: "unknown op" };
   } catch (err) {
     return {

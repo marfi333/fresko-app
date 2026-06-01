@@ -6,7 +6,7 @@ export type MirrorRow = {
   [key: string]: unknown;
 };
 
-export type OutboxOp = "create" | "update" | "delete";
+export type OutboxOp = "create" | "update" | "delete" | "decrease";
 
 export type OutboxStatus = "pending" | "in_flight" | "failed";
 

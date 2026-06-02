@@ -7,7 +7,6 @@ import {
   type PrecacheEntry,
   Serwist,
   type SerwistGlobalConfig,
-  StaleWhileRevalidate,
 } from "serwist";
 import { SYNC_MESSAGE, SYNC_TAG } from "./sync-tag";
 
@@ -26,9 +25,10 @@ declare const self: ServiceWorkerGlobalScope & {
   addEventListener(type: "sync", listener: (event: SyncEvent) => void): void;
 };
 
-const apiGet = new StaleWhileRevalidate({
-  cacheName: "fresko-api-get",
-});
+// API GETs are NetworkOnly: serving stale cached JSON here overwrites the
+// optimistic TanStack cache after a mutation. When offline the fetch throws and
+// the queryFn falls back to the IDB mirror — the single offline read source.
+const apiGet = new NetworkOnly();
 
 // Mutations always hit the network. When offline they throw at the client,
 // which our `mutateOrEnqueue` catches and routes to the IDB outbox.
@@ -86,6 +86,13 @@ const serwist = new Serwist({
 });
 
 serwist.addEventListeners();
+
+// One-time cleanup: older clients cached API GET JSON under "fresko-api-get"
+// (StaleWhileRevalidate). That cache is no longer written; delete it on
+// activation so an already-deployed SW stops serving stale API responses.
+self.addEventListener("activate", (event) => {
+  event.waitUntil(caches.delete("fresko-api-get"));
+});
 
 // Background Sync: when the browser fires our sync tag, broadcast a message to
 // all clients. Whichever client is open runs the sync runner against its own

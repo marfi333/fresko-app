@@ -1,5 +1,8 @@
-import type { ReactNode } from "react";
+"use client";
+
+import { type ReactNode, useEffect, useState } from "react";
 import { QueuePopover } from "@/components/offline/queue-popover";
+import { cn } from "@/lib/utils";
 
 type PageHeaderProps = {
   title: string;
@@ -8,8 +11,22 @@ type PageHeaderProps = {
 };
 
 export const PageHeader = ({ title, description, action }: PageHeaderProps) => {
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 0);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
   return (
-    <div className="flex items-center justify-between px-6 py-4">
+    <div
+      className={cn(
+        "sticky top-0 z-30 flex items-center justify-between border-b bg-background px-6 py-4 transition-colors",
+        scrolled ? "border-border" : "border-transparent"
+      )}
+    >
       <div className="flex items-center gap-3">
         <img src="/favicon.svg" alt="" className="size-10 shrink-0" />
         <div>

@@ -20,7 +20,7 @@ export const RangeSelector = ({ value, onChange }: RangeSelectorProps) => {
     <div
       role="tablist"
       aria-label="Time range"
-      className="inline-flex rounded-md border bg-card p-0.5"
+      className="flex w-full rounded-md border bg-card p-0.5 sm:inline-flex sm:w-auto"
     >
       {RANGES.map((option) => {
         const active = option.value === value;
@@ -32,7 +32,7 @@ export const RangeSelector = ({ value, onChange }: RangeSelectorProps) => {
             aria-selected={active}
             onClick={() => onChange(option.value)}
             className={cn(
-              "rounded-sm px-3 py-1 text-xs font-medium transition-colors",
+              "flex-1 rounded-sm px-3 py-1.5 text-sm font-medium transition-colors sm:flex-none sm:py-1 sm:text-xs",
               active
                 ? "bg-primary text-primary-foreground"
                 : "text-muted-foreground hover:text-foreground"

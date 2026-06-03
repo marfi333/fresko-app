@@ -49,7 +49,7 @@ export const OfflineBadge = ({ className }: OfflineBadgeProps) => {
       <span
         aria-live="polite"
         className={cn(
-          "inline-flex items-center gap-1.5 rounded-full bg-emerald-100 px-3 py-1 text-xs font-medium text-emerald-900",
+          "inline-flex items-center gap-1.5 rounded-full bg-emerald-100 px-3 py-1 text-xs font-medium text-emerald-900 dark:bg-emerald-950 dark:text-emerald-200",
           className
         )}
       >
@@ -74,9 +74,9 @@ export const OfflineBadge = ({ className }: OfflineBadgeProps) => {
       className={cn(
         "inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium",
         online
-          ? "bg-amber-100 text-amber-900"
+          ? "bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-200"
           : failed > 0
-            ? "bg-rose-100 text-rose-900"
+            ? "bg-rose-100 text-rose-900 dark:bg-rose-950 dark:text-rose-200"
             : "bg-muted text-foreground/80",
         className
       )}

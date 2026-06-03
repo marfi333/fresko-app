@@ -162,7 +162,10 @@ export const BarcodeScannerSheet = ({ open, onOpenChange, onResult }: BarcodeSca
                 role="status"
                 aria-live="polite"
               >
-                <Check className="h-5 w-5 text-emerald-600" aria-hidden="true" />
+                <Check
+                  className="h-5 w-5 text-emerald-600 dark:text-emerald-400"
+                  aria-hidden="true"
+                />
                 <div className="flex flex-col">
                   <span className="text-sm font-medium">Got it!</span>
                   <span className="font-mono text-xs text-muted-foreground">{scannedCode}</span>

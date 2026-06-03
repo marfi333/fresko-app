@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PageHeader } from "@/components/ui/page-header";
 import { authClient, useSession } from "@/lib/auth-client";
+import { ThemeSelector } from "./_components/theme-selector";
 
 type ActiveOrg = {
   id: string;
@@ -167,6 +168,15 @@ export default function ProfilePage() {
             ) : (
               <p className="text-base">{activeOrg.name}</p>
             )}
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="px-6">
+        <Card>
+          <CardContent className="space-y-3 pt-6">
+            <p className="text-xs font-medium text-muted-foreground">Appearance</p>
+            <ThemeSelector />
           </CardContent>
         </Card>
       </div>

@@ -16,7 +16,10 @@ export const BarcodeOfflineState = ({ onRetry, onCancel }: BarcodeOfflineStatePr
         role="alert"
         className="flex items-start gap-3 rounded-md border border-amber-500/30 bg-amber-500/5 p-4"
       >
-        <WifiOff className="mt-0.5 size-5 shrink-0 text-amber-700" aria-hidden />
+        <WifiOff
+          className="mt-0.5 size-5 shrink-0 text-amber-700 dark:text-amber-400"
+          aria-hidden
+        />
         <div className="flex flex-col gap-1">
           <span className="text-sm font-medium">Barcode lookup requires internet</span>
           <span className="text-xs text-muted-foreground">

@@ -84,11 +84,62 @@
   --sidebar-ring: oklch(0.55 0.12 40);
 }
 
+.dark {
+  /* Warm dark palette — espresso/charcoal grounds, terracotta accents
+     brightened for contrast against the dark background. */
+  --background: oklch(0.2 0.01 60);
+  --foreground: oklch(0.92 0.008 80);
+  --card: oklch(0.24 0.012 60);
+  --card-foreground: oklch(0.92 0.008 80);
+  --popover: oklch(0.24 0.012 60);
+  --popover-foreground: oklch(0.92 0.008 80);
+  --primary: oklch(0.62 0.13 40);
+  --primary-foreground: oklch(0.98 0.005 80);
+  --secondary: oklch(0.28 0.015 60);
+  --secondary-foreground: oklch(0.9 0.01 80);
+  --muted: oklch(0.28 0.015 60);
+  --muted-foreground: oklch(0.68 0.015 70);
+  --accent: oklch(0.33 0.03 80);
+  --accent-foreground: oklch(0.92 0.01 80);
+  --destructive: oklch(0.62 0.19 25);
+  --destructive-foreground: oklch(0.98 0.005 80);
+  --border: oklch(0.31 0.015 60);
+  --input: oklch(0.34 0.015 60);
+  --ring: oklch(0.62 0.13 40);
+  --chart-1: oklch(0.64 0.13 40);
+  --chart-2: oklch(0.68 0.1 150);
+  --chart-3: oklch(0.72 0.09 80);
+  --chart-4: oklch(0.75 0.12 60);
+  --chart-5: oklch(0.62 0.09 200);
+  --sidebar: oklch(0.22 0.012 60);
+  --sidebar-foreground: oklch(0.92 0.008 80);
+  --sidebar-primary: oklch(0.62 0.13 40);
+  --sidebar-primary-foreground: oklch(0.98 0.005 80);
+  --sidebar-accent: oklch(0.31 0.025 80);
+  --sidebar-accent-foreground: oklch(0.92 0.01 80);
+  --sidebar-border: oklch(0.31 0.015 60);
+  --sidebar-ring: oklch(0.62 0.13 40);
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
   }
   body {
     @apply bg-background text-foreground;
+  }
+
+  /* Subtle theme cross-fade. Skipped for reduced-motion users (instant switch). */
+  @media (prefers-reduced-motion: no-preference) {
+    *,
+    *::before,
+    *::after {
+      transition:
+        background-color 200ms ease,
+        border-color 200ms ease,
+        color 200ms ease,
+        fill 200ms ease,
+        stroke 200ms ease;
+    }
   }
 }
